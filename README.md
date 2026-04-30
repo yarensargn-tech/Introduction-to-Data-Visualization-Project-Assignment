@@ -1,4 +1,4 @@
-#  SGSA — Akıllı Şebeke Stres Analiz Sistemi
+# 🚀 SGSA — Akıllı Şebeke Stres Analiz Sistemi
 
 <p align="center">
   <b>Gerçek zamanlı şebeke simülasyonu • Risk analizi • Modern dashboard</b>
