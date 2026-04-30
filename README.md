@@ -223,44 +223,48 @@ Aşağıdaki senaryolar ile sistemi test edebilirsiniz:
 
 Herhangi bir bağımlılık gerektirmez.
 
-## Mermaid Kodu
+## Sistem Diyagramı
+
+```mermaid
 flowchart LR
 
-A[User] --> B[Frontend UI]
+A[Kullanıcı] --> B[Ön Uç Arayüzü]
 
-B --> C{Authentication}
-C -->|Login| D[Auth Service]
-C -->|Guest| E[Limited Access]
+B --> C{Kimlik Doğrulama}
+C -->|Giriş| D[Kimlik Doğrulama Servisi]
+C -->|Misafir| E[Sınırlı Erişim]
 
-D --> F[Backend API]
+D --> F[Arka Uç API]
 E --> F
 
-subgraph Core System
-F --> G[User Management]
-F --> H[Project Management]
-F --> I[Data Processing]
-F --> J[Notification System]
-end
+F --> G[Kullanıcı Yönetimi]
+F --> H[Proje Yönetimi]
+F --> I[Veri İşleme]
+F --> J[Bildirim Sistemi]
 
-subgraph Database
-K[(Database)]
-K --> K1[Users]
-K --> K2[Projects]
-K --> K3[Logs]
-end
+G --> G1[Profil Yönetimi]
+G --> G2[Rol & Yetkiler]
 
-F --> K
+H --> H1[Proje Oluştur]
+H --> H2[Güncelle/Sil]
+H --> H3[Görev Ata]
 
-subgraph External
-L[External APIs]
-L --> L1[Integration]
-L --> L2[Analytics]
-end
+I --> I1[Girdi Doğrulama]
+I --> I2[İş Mantığı]
+I --> I3[Veri Dönüşümü]
 
-F --> L
+J --> J1[E-posta]
+J --> J2[Push Bildirim]
 
-J --> N[Feedback]
+F --> K[(Veritabanı)]
+K --> K1[Kullanıcılar]
+K --> K2[Projeler]
+K --> K3[Loglar]
+
+F --> L[Harici API]
+L --> L1[Entegrasyon]
+L --> L2[Analitik]
+
+J --> N[Geri Bildirim]
 N --> B
-
-```bash
-git clone <repo-url>
+```
