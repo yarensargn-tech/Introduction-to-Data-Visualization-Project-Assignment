@@ -1,4 +1,4 @@
-# 🚀 SGSA — Akıllı Şebeke Stres Analiz Sistemi
+#  SGSA — Akıllı Şebeke Stres Analiz Sistemi
 
 <p align="center">
   <b>Gerçek zamanlı şebeke simülasyonu • Risk analizi • Modern dashboard</b>
@@ -224,52 +224,43 @@ Aşağıdaki senaryolar ile sistemi test edebilirsiniz:
 Herhangi bir bağımlılık gerektirmez.
 
 ## Mermaid Kodu
-flowchart TD
+flowchart LR
 
 A[User] --> B[Frontend UI]
 
 B --> C{Authentication}
-C -->|Login/Register| D[Auth Service]
+C -->|Login| D[Auth Service]
 C -->|Guest| E[Limited Access]
 
 D --> F[Backend API]
 E --> F
 
+subgraph Core System
 F --> G[User Management]
 F --> H[Project Management]
 F --> I[Data Processing]
 F --> J[Notification System]
+end
 
-G --> G1[Profile Handling]
-G --> G2[Role & Permissions]
-
-H --> H1[Create Project]
-H --> H2[Update/Delete Project]
-H --> H3[Assign Tasks]
-
-I --> I1[Input Validation]
-I --> I2[Business Logic Engine]
-I --> I3[Data Transformation]
-
-J --> J1[Email Service]
-J --> J2[Push Notifications]
-
-F --> K[(Database)]
-K --> K1[Users Table]
-K --> K2[Projects Table]
+subgraph Database
+K[(Database)]
+K --> K1[Users]
+K --> K2[Projects]
 K --> K3[Logs]
+end
 
-F --> L[External APIs]
-L --> L1[3rd Party Integration]
-L --> L2[Analytics Service]
+F --> K
 
-F --> M[Monitoring System]
-M --> M1[Error Tracking]
-M --> M2[Performance Metrics]
+subgraph External
+L[External APIs]
+L --> L1[Integration]
+L --> L2[Analytics]
+end
 
-J --> N[User Feedback Loop]
+F --> L
+
+J --> N[Feedback]
 N --> B
-
 
 ```bash
 git clone <repo-url>
