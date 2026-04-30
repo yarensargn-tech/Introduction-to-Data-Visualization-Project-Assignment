@@ -1,0 +1,1786 @@
+<!DOCTYPE html>
+<html lang="tr">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SGSA — Akıllı Şebeke Stres Analiz Sistemi</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link
+    href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;700&family=Rajdhani:wght@400;500;600;700&display=swap"
+    rel="stylesheet">
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0
+    }
+
+    :root {
+      --bg: #080c10;
+      --bg2: #0d1117;
+      --bg3: #111820;
+      --panel: #0f1923;
+      --border: #1e2d3d;
+      --border2: #253545;
+      --text: #c9d6df;
+      --text2: #6b8ca8;
+      --text3: #3d5a70;
+      --accent: #00d4aa;
+      --accent2: #0097d4;
+      --warn: #f0a500;
+      --crit: #e84343;
+      --ok: #3ecf63;
+      --grid-line: #0e1c28;
+    }
+
+    html,
+    body {
+      height: 100%;
+      font-family: 'Rajdhani', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      overflow-x: hidden
+    }
+
+    /* ── SCANLINE OVERLAY ── */
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background: repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(0, 0, 0, .03) 2px, rgba(0, 0, 0, .03) 4px);
+      pointer-events: none;
+      z-index: 9999
+    }
+
+    /* ── PAGES ── */
+    .page {
+      display: none;
+      min-height: 100vh
+    }
+
+    .page.active {
+      display: flex
+    }
+
+    /* ═══════════════════════════════
+   LOGIN PAGE
+═══════════════════════════════ */
+    #login-page {
+      align-items: center;
+      justify-content: center;
+      position: relative;
+      overflow: hidden
+    }
+
+    .grid-bg {
+      position: absolute;
+      inset: 0;
+      background-image: linear-gradient(var(--grid-line) 1px, transparent 1px), linear-gradient(90deg, var(--grid-line) 1px, transparent 1px);
+      background-size: 40px 40px;
+      opacity: .6
+    }
+
+    .grid-bg::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: radial-gradient(ellipse 60% 60% at 50% 50%, transparent 0%, var(--bg) 75%)
+    }
+
+    .corner {
+      position: absolute;
+      width: 40px;
+      height: 40px;
+      border-color: var(--accent);
+      border-style: solid;
+      opacity: .4
+    }
+
+    .corner-tl {
+      top: 24px;
+      left: 24px;
+      border-width: 2px 0 0 2px
+    }
+
+    .corner-tr {
+      top: 24px;
+      right: 24px;
+      border-width: 2px 2px 0 0
+    }
+
+    .corner-bl {
+      bottom: 24px;
+      left: 24px;
+      border-width: 0 0 2px 2px
+    }
+
+    .corner-br {
+      bottom: 24px;
+      right: 24px;
+      border-width: 0 2px 2px 0
+    }
+
+    .login-box {
+      position: relative;
+      z-index: 2;
+      width: 100%;
+      max-width: 420px;
+      padding: 0 20px
+    }
+
+    .logo-area {
+      text-align: center;
+      margin-bottom: 2.5rem
+    }
+
+    .logo-hex {
+      width: 64px;
+      height: 64px;
+      margin: 0 auto 1rem;
+      position: relative
+    }
+
+    .logo-hex svg {
+      width: 100%;
+      height: 100%
+    }
+
+    .logo-pulse {
+      animation: logopulse 2s ease-in-out infinite
+    }
+
+    @keyframes logopulse {
+
+      0%,
+      100% {
+        opacity: .3;
+        transform: scale(1)
+      }
+
+      50% {
+        opacity: .8;
+        transform: scale(1.08)
+      }
+    }
+
+    .logo-title {
+      font-size: 28px;
+      font-weight: 700;
+      letter-spacing: 4px;
+      color: #fff;
+      font-family: 'Rajdhani', sans-serif
+    }
+
+    .logo-sub {
+      font-size: 11px;
+      color: var(--text2);
+      letter-spacing: 3px;
+      text-transform: uppercase;
+      margin-top: 4px
+    }
+
+    .card {
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      padding: 2rem;
+      position: relative;
+      overflow: hidden
+    }
+
+    .card::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 1px;
+      background: linear-gradient(90deg, transparent, var(--accent), transparent)
+    }
+
+    .tab-row {
+      display: flex;
+      margin-bottom: 1.5rem;
+      border: 1px solid var(--border);
+      border-radius: 3px;
+      overflow: hidden
+    }
+
+    .tab {
+      flex: 1;
+      padding: 8px;
+      text-align: center;
+      font-size: 12px;
+      font-weight: 600;
+      letter-spacing: 1.5px;
+      cursor: pointer;
+      color: var(--text2);
+      transition: all .2s;
+      font-family: 'Rajdhani', sans-serif;
+      border: none;
+      background: transparent;
+      text-transform: uppercase
+    }
+
+    .tab.active {
+      background: rgba(0, 212, 170, .1);
+      color: var(--accent)
+    }
+
+    .field-group {
+      margin-bottom: 1.2rem
+    }
+
+    .field-label {
+      display: block;
+      font-size: 10px;
+      font-weight: 600;
+      letter-spacing: 1.5px;
+      color: var(--text2);
+      margin-bottom: 6px;
+      text-transform: uppercase
+    }
+
+    .field-input {
+      width: 100%;
+      background: var(--bg3);
+      border: 1px solid var(--border);
+      border-radius: 3px;
+      padding: 10px 14px;
+      color: var(--text);
+      font-size: 14px;
+      font-family: 'JetBrains Mono', monospace;
+      outline: none;
+      transition: border-color .2s
+    }
+
+    .field-input:focus {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 2px rgba(0, 212, 170, .08)
+    }
+
+    .field-input::placeholder {
+      color: var(--text3)
+    }
+
+    select.field-input option {
+      background: var(--bg2)
+    }
+
+    .role-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 6px;
+      margin-top: 4px
+    }
+
+    .role-btn {
+      padding: 8px 10px;
+      border: 1px solid var(--border);
+      border-radius: 3px;
+      background: var(--bg3);
+      color: var(--text2);
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: .8px;
+      cursor: pointer;
+      text-align: center;
+      transition: all .2s;
+      font-family: 'Rajdhani', sans-serif;
+      text-transform: uppercase
+    }
+
+    .role-btn.selected {
+      border-color: var(--accent);
+      color: var(--accent);
+      background: rgba(0, 212, 170, .08)
+    }
+
+    .submit-btn {
+      width: 100%;
+      padding: 12px;
+      background: var(--accent);
+      color: #000;
+      font-size: 13px;
+      font-weight: 700;
+      letter-spacing: 2px;
+      border: none;
+      border-radius: 3px;
+      cursor: pointer;
+      font-family: 'Rajdhani', sans-serif;
+      text-transform: uppercase;
+      transition: all .2s;
+      position: relative;
+      overflow: hidden;
+      margin-top: .5rem
+    }
+
+    .submit-btn:hover {
+      background: #00f0c0;
+      transform: translateY(-1px)
+    }
+
+    .submit-btn:active {
+      transform: translateY(0)
+    }
+
+    .submit-btn::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(90deg, transparent, rgba(255, 255, 255, .15), transparent);
+      transform: translateX(-100%);
+      transition: transform .4s
+    }
+
+    .submit-btn:hover::after {
+      transform: translateX(100%)
+    }
+
+    .msg {
+      padding: 8px 12px;
+      border-radius: 3px;
+      font-size: 12px;
+      font-family: 'JetBrains Mono', monospace;
+      margin-bottom: 1rem;
+      display: none
+    }
+
+    .msg.err {
+      background: rgba(232, 67, 67, .1);
+      border: 1px solid rgba(232, 67, 67, .3);
+      color: #e84343
+    }
+
+    .msg.ok {
+      background: rgba(62, 207, 99, .1);
+      border: 1px solid rgba(62, 207, 99, .3);
+      color: #3ecf63
+    }
+
+    .msg.show {
+      display: block
+    }
+
+    .status-bar {
+      text-align: center;
+      margin-top: 1rem;
+      font-size: 10px;
+      color: var(--text3);
+      letter-spacing: 1px;
+      font-family: 'JetBrains Mono', monospace
+    }
+
+    /* ═══════════════════════════════
+   DASHBOARD
+═══════════════════════════════ */
+    #dash-page {
+      flex-direction: column;
+      min-height: 100vh
+    }
+
+    /* TOP BAR */
+    .topbar {
+      background: var(--panel);
+      border-bottom: 1px solid var(--border);
+      padding: 0 20px;
+      height: 52px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-shrink: 0;
+      position: sticky;
+      top: 0;
+      z-index: 100
+    }
+
+    .tb-left {
+      display: flex;
+      align-items: center;
+      gap: 14px
+    }
+
+    .tb-logo {
+      font-size: 16px;
+      font-weight: 700;
+      letter-spacing: 3px;
+      color: var(--accent)
+    }
+
+    .tb-sep {
+      width: 1px;
+      height: 20px;
+      background: var(--border)
+    }
+
+    .tb-title {
+      font-size: 12px;
+      color: var(--text2);
+      letter-spacing: 1px;
+      text-transform: uppercase
+    }
+
+    .tb-right {
+      display: flex;
+      align-items: center;
+      gap: 12px
+    }
+
+    .user-chip {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      background: var(--bg3);
+      border: 1px solid var(--border);
+      border-radius: 3px;
+      padding: 4px 10px
+    }
+
+    .user-avatar {
+      width: 22px;
+      height: 22px;
+      background: rgba(0, 212, 170, .2);
+      border: 1px solid rgba(0, 212, 170, .4);
+      border-radius: 2px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 10px;
+      font-weight: 700;
+      color: var(--accent)
+    }
+
+    .user-name {
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--text)
+    }
+
+    .user-role {
+      font-size: 9px;
+      color: var(--text2);
+      letter-spacing: .8px;
+      text-transform: uppercase
+    }
+
+    .logout-btn {
+      padding: 5px 12px;
+      background: transparent;
+      border: 1px solid var(--border);
+      border-radius: 3px;
+      color: var(--text2);
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: 1px;
+      cursor: pointer;
+      font-family: 'Rajdhani', sans-serif;
+      text-transform: uppercase;
+      transition: all .2s
+    }
+
+    .logout-btn:hover {
+      border-color: var(--crit);
+      color: var(--crit)
+    }
+
+    /* MAIN CONTENT */
+    .main {
+      display: flex;
+      flex: 1;
+      overflow: hidden
+    }
+
+    .sidebar {
+      width: 200px;
+      background: var(--panel);
+      border-right: 1px solid var(--border);
+      flex-shrink: 0;
+      padding: 1rem 0;
+      display: flex;
+      flex-direction: column
+    }
+
+    .nav-section {
+      font-size: 9px;
+      letter-spacing: 1.5px;
+      color: var(--text3);
+      padding: 0 16px;
+      margin: 12px 0 6px;
+      text-transform: uppercase
+    }
+
+    .nav-item {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 16px;
+      cursor: pointer;
+      color: var(--text2);
+      font-size: 13px;
+      font-weight: 500;
+      letter-spacing: .3px;
+      transition: all .15s;
+      border-left: 2px solid transparent;
+      position: relative
+    }
+
+    .nav-item:hover {
+      background: rgba(255, 255, 255, .03);
+      color: var(--text)
+    }
+
+    .nav-item.active {
+      color: var(--accent);
+      border-left-color: var(--accent);
+      background: rgba(0, 212, 170, .05)
+    }
+
+    .nav-icon {
+      width: 14px;
+      height: 14px;
+      opacity: .7;
+      flex-shrink: 0
+    }
+
+    .nav-badge {
+      margin-left: auto;
+      background: var(--crit);
+      color: #fff;
+      font-size: 9px;
+      font-weight: 700;
+      padding: 1px 5px;
+      border-radius: 2px
+    }
+
+    .content {
+      flex: 1;
+      overflow-y: auto;
+      padding: 1.25rem;
+      display: flex;
+      flex-direction: column;
+      gap: 1rem
+    }
+
+    /* STAT CARDS */
+    .stat-row {
+      display: grid;
+      grid-template-columns: repeat(6, 1fr);
+      gap: 8px
+    }
+
+    .stat-card {
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      padding: .75rem 1rem;
+      position: relative;
+      overflow: hidden
+    }
+
+    .stat-card::after {
+      content: '';
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      height: 2px
+    }
+
+    .stat-card.ok::after {
+      background: var(--ok)
+    }
+
+    .stat-card.warn::after {
+      background: var(--warn)
+    }
+
+    .stat-card.crit::after {
+      background: var(--crit)
+    }
+
+    .stat-card.blue::after {
+      background: var(--accent2)
+    }
+
+    .stat-val {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 20px;
+      font-weight: 700;
+      line-height: 1.1
+    }
+
+    .stat-lbl {
+      font-size: 9px;
+      color: var(--text2);
+      letter-spacing: 1.2px;
+      text-transform: uppercase;
+      margin-top: 4px
+    }
+
+    .stat-delta {
+      font-size: 10px;
+      font-family: 'JetBrains Mono', monospace;
+      margin-top: 3px
+    }
+
+    .stat-delta.up {
+      color: var(--crit)
+    }
+
+    .stat-delta.dn {
+      color: var(--ok)
+    }
+
+    /* GRID LAYOUT */
+    .grid-2 {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px
+    }
+
+    .grid-3 {
+      display: grid;
+      grid-template-columns: 2fr 1fr;
+      gap: 8px
+    }
+
+    /* PANELS */
+    .panel {
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      padding: 1rem;
+      position: relative
+    }
+
+    .panel-title {
+      font-size: 10px;
+      font-weight: 600;
+      letter-spacing: 1.5px;
+      color: var(--text2);
+      text-transform: uppercase;
+      margin-bottom: .75rem;
+      display: flex;
+      align-items: center;
+      gap: 6px
+    }
+
+    .panel-title::before {
+      content: '';
+      width: 3px;
+      height: 12px;
+      background: var(--accent);
+      border-radius: 1px
+    }
+
+    .panel-corner {
+      position: absolute;
+      top: 0;
+      right: 0;
+      font-size: 9px;
+      font-family: 'JetBrains Mono', monospace;
+      color: var(--text3);
+      padding: 6px 10px;
+      letter-spacing: .5px
+    }
+
+    /* NODE ITEMS */
+    .node-item {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 5px 0;
+      border-bottom: 1px solid var(--border);
+      font-size: 12px
+    }
+
+    .node-item:last-child {
+      border: none
+    }
+
+    .node-id {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 10px;
+      color: var(--text3);
+      min-width: 32px
+    }
+
+    .node-name {
+      flex: 1;
+      color: var(--text);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis
+    }
+
+    .bar-wrap {
+      width: 80px;
+      height: 5px;
+      background: var(--bg3);
+      border-radius: 2px;
+      overflow: hidden
+    }
+
+    .bar-fill {
+      height: 100%;
+      border-radius: 2px;
+      transition: width .6s
+    }
+
+    .node-pct {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 10px;
+      min-width: 30px;
+      text-align: right
+    }
+
+    /* RISK METER */
+    .risk-track {
+      height: 8px;
+      border-radius: 4px;
+      background: linear-gradient(90deg, var(--ok), var(--warn), var(--crit));
+      position: relative;
+      margin: 8px 0 4px
+    }
+
+    .risk-thumb {
+      position: absolute;
+      top: 50%;
+      width: 14px;
+      height: 14px;
+      background: var(--bg);
+      border: 2px solid #fff;
+      border-radius: 50%;
+      transform: translate(-50%, -50%);
+      transition: left .8s cubic-bezier(.34, 1.56, .64, 1);
+      box-shadow: 0 0 8px rgba(255, 255, 255, .3)
+    }
+
+    /* EVENT LOG */
+    .event-item {
+      display: flex;
+      align-items: flex-start;
+      gap: 6px;
+      padding: 5px 0;
+      border-bottom: 1px solid var(--border);
+      font-size: 11px
+    }
+
+    .event-item:last-child {
+      border: none
+    }
+
+    .evt-time {
+      font-family: 'JetBrains Mono', monospace;
+      color: var(--text3);
+      min-width: 50px;
+      font-size: 10px
+    }
+
+    .evt-dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      margin-top: 2px;
+      flex-shrink: 0
+    }
+
+    .evt-msg {
+      color: var(--text2)
+    }
+
+    /* BADGES */
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 3px;
+      padding: 2px 7px;
+      border-radius: 2px;
+      font-size: 10px;
+      font-weight: 600;
+      letter-spacing: .5px;
+      text-transform: uppercase
+    }
+
+    .badge-ok {
+      background: rgba(62, 207, 99, .1);
+      color: var(--ok);
+      border: 1px solid rgba(62, 207, 99, .2)
+    }
+
+    .badge-warn {
+      background: rgba(240, 165, 0, .1);
+      color: var(--warn);
+      border: 1px solid rgba(240, 165, 0, .2)
+    }
+
+    .badge-crit {
+      background: rgba(232, 67, 67, .1);
+      color: var(--crit);
+      border: 1px solid rgba(232, 67, 67, .2)
+    }
+
+    .badge-info {
+      background: rgba(0, 151, 212, .1);
+      color: var(--accent2);
+      border: 1px solid rgba(0, 151, 212, .2)
+    }
+
+    .live-dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: var(--ok);
+      display: inline-block;
+      animation: blink 1.4s infinite
+    }
+
+    @keyframes blink {
+
+      0%,
+      100% {
+        opacity: 1
+      }
+
+      50% {
+        opacity: .2
+      }
+    }
+
+    /* CONTROL PANEL (only admin) */
+    .control-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px
+    }
+
+    .ctrl-item {
+      background: var(--bg3);
+      border: 1px solid var(--border);
+      border-radius: 3px;
+      padding: .75rem
+    }
+
+    .ctrl-label {
+      font-size: 9px;
+      letter-spacing: 1px;
+      color: var(--text2);
+      text-transform: uppercase;
+      margin-bottom: 6px
+    }
+
+    .ctrl-slider {
+      width: 100%;
+      accent-color: var(--accent);
+      cursor: pointer
+    }
+
+    .ctrl-val {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 13px;
+      color: var(--accent);
+      margin-top: 4px
+    }
+
+    .ctrl-btn {
+      padding: 6px 14px;
+      border: 1px solid var(--border2);
+      background: transparent;
+      color: var(--text2);
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: .8px;
+      cursor: pointer;
+      border-radius: 2px;
+      font-family: 'Rajdhani', sans-serif;
+      text-transform: uppercase;
+      transition: all .2s;
+      margin-right: 4px;
+      margin-top: 4px
+    }
+
+    .ctrl-btn:hover {
+      border-color: var(--accent);
+      color: var(--accent)
+    }
+
+    .ctrl-btn.danger:hover {
+      border-color: var(--crit);
+      color: var(--crit)
+    }
+
+    /* READ-ONLY notice */
+    .readonly-notice {
+      background: rgba(0, 151, 212, .05);
+      border: 1px solid rgba(0, 151, 212, .2);
+      border-radius: 3px;
+      padding: 8px 12px;
+      font-size: 11px;
+      color: var(--accent2);
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      margin-bottom: .75rem
+    }
+
+    /* CANVAS */
+    canvas {
+      display: block;
+      width: 100%;
+      border-radius: 2px
+    }
+
+    /* SCROLLBAR */
+    ::-webkit-scrollbar {
+      width: 4px;
+      height: 4px
+    }
+
+    ::-webkit-scrollbar-track {
+      background: transparent
+    }
+
+    ::-webkit-scrollbar-thumb {
+      background: var(--border2);
+      border-radius: 2px
+    }
+
+    /* FADE-IN */
+    .fade-in {
+      animation: fadein .4s ease
+    }
+
+    @keyframes fadein {
+      from {
+        opacity: 0;
+        transform: translateY(6px)
+      }
+
+      to {
+        opacity: 1;
+        transform: translateY(0)
+      }
+    }
+
+    /* RESPONSIVE */
+    @media(max-width:900px) {
+      .stat-row {
+        grid-template-columns: repeat(3, 1fr)
+      }
+
+      .sidebar {
+        display: none
+      }
+
+      .grid-2,
+      .grid-3 {
+        grid-template-columns: 1fr
+      }
+    }
+
+    @media(max-width:600px) {
+      .stat-row {
+        grid-template-columns: repeat(2, 1fr)
+      }
+    }
+  </style>
+</head>
+
+<body>
+
+  <!-- ════════════════ LOGIN PAGE ════════════════ -->
+  <div id="login-page" class="page active">
+    <div class="grid-bg"></div>
+    <div class="corner corner-tl"></div>
+    <div class="corner corner-tr"></div>
+    <div class="corner corner-bl"></div>
+    <div class="corner corner-br"></div>
+
+    <div class="login-box fade-in">
+      <div class="logo-area">
+        <div class="logo-hex">
+          <svg viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <polygon class="logo-pulse" points="32,4 58,18 58,46 32,60 6,46 6,18" fill="rgba(0,212,170,.06)"
+              stroke="rgba(0,212,170,.4)" stroke-width="1" />
+            <polygon points="32,12 50,22 50,42 32,52 14,42 14,22" fill="rgba(0,212,170,.04)"
+              stroke="rgba(0,212,170,.25)" stroke-width="1" />
+            <path d="M24 36 L32 20 L36 28 L40 22 L40 44 L36 38 L32 46 L28 36Z" fill="none" stroke="#00d4aa"
+              stroke-width="1.5" stroke-linejoin="round" />
+            <circle cx="32" cy="32" r="3" fill="#00d4aa" opacity=".7" />
+          </svg>
+        </div>
+        <div class="logo-title">SGSA</div>
+        <div class="logo-sub">Smart Grid Stress Analyzer</div>
+      </div>
+
+      <div class="card">
+        <div class="tab-row" id="auth-tabs">
+          <button class="tab active" onclick="switchTab('login')">Giriş</button>
+          <button class="tab" onclick="switchTab('register')">Kayıt Ol</button>
+        </div>
+
+        <div id="msg" class="msg"></div>
+
+        <!-- LOGIN FORM -->
+        <div id="login-form">
+          <div class="field-group">
+            <label class="field-label">Kullanıcı Adı</label>
+            <input class="field-input" id="l-user" type="text" placeholder="kullanici_adi" autocomplete="username">
+          </div>
+          <div class="field-group">
+            <label class="field-label">Şifre</label>
+            <input class="field-input" id="l-pass" type="password" placeholder="••••••••"
+              autocomplete="current-password">
+          </div>
+          <button class="submit-btn" onclick="doLogin()">SİSTEME GİR &rarr;</button>
+        </div>
+
+        <!-- REGISTER FORM -->
+        <div id="register-form" style="display:none">
+          <div class="field-group">
+            <label class="field-label">Ad Soyad</label>
+            <input class="field-input" id="r-name" type="text" placeholder="Adınız Soyadınız">
+          </div>
+          <div class="field-group">
+            <label class="field-label">Kullanıcı Adı</label>
+            <input class="field-input" id="r-user" type="text" placeholder="kullanici_adi">
+          </div>
+          <div class="field-group">
+            <label class="field-label">Şifre</label>
+            <input class="field-input" id="r-pass" type="password" placeholder="En az 6 karakter">
+          </div>
+          <div class="field-group">
+            <label class="field-label">Rol Seçin</label>
+            <div class="role-grid" id="role-grid">
+              <div class="role-btn" data-role="izleyici" onclick="selectRole(this)">İzleyici</div>
+              <div class="role-btn" data-role="analist" onclick="selectRole(this)">Analist</div>
+              <div class="role-btn" data-role="muhendis" onclick="selectRole(this)">Mühendis</div>
+              <div class="role-btn" data-role="admin" onclick="selectRole(this)">Admin</div>
+            </div>
+          </div>
+          <button class="submit-btn" onclick="doRegister()">KAYIT OL &rarr;</button>
+        </div>
+      </div>
+
+      <div class="status-bar">
+        <span class="live-dot"></span>&nbsp; SİSTEM AKTIF &nbsp;|&nbsp; v2.4.1 &nbsp;|&nbsp; <span
+          id="login-clock">--:--:--</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- ════════════════ DASHBOARD PAGE ════════════════ -->
+  <div id="dash-page" class="page">
+
+    <!-- TOPBAR -->
+    <div class="topbar">
+      <div class="tb-left">
+        <span class="tb-logo">SGSA</span>
+        <div class="tb-sep"></div>
+        <span class="tb-title">Şebeke Stres Analiz Sistemi</span>
+        <span class="badge badge-ok" style="margin-left:4px"><span class="live-dot"
+            style="width:5px;height:5px"></span>CANLI</span>
+      </div>
+      <div class="tb-right">
+        <span style="font-size:10px;font-family:'JetBrains Mono',monospace;color:var(--text3)"
+          id="dash-clock">--:--:--</span>
+        <div class="user-chip">
+          <div class="user-avatar" id="u-avatar">??</div>
+          <div>
+            <div class="user-name" id="u-name">Kullanıcı</div>
+            <div class="user-role" id="u-role">rol</div>
+          </div>
+        </div>
+        <button class="logout-btn" onclick="doLogout()">ÇIKIŞ</button>
+      </div>
+    </div>
+
+    <div class="main">
+      <!-- SIDEBAR -->
+      <div class="sidebar">
+        <div class="nav-section">İzleme</div>
+        <div class="nav-item active" onclick="navTo('genel')">
+          <svg class="nav-icon" viewBox="0 0 14 14" fill="none">
+            <rect x="1" y="1" width="5" height="5" rx="1" stroke="currentColor" stroke-width="1.2" />
+            <rect x="8" y="1" width="5" height="5" rx="1" stroke="currentColor" stroke-width="1.2" />
+            <rect x="1" y="8" width="5" height="5" rx="1" stroke="currentColor" stroke-width="1.2" />
+            <rect x="8" y="8" width="5" height="5" rx="1" stroke="currentColor" stroke-width="1.2" />
+          </svg>
+          Genel Bakış
+        </div>
+        <div class="nav-item" onclick="navTo('topoloji')">
+          <svg class="nav-icon" viewBox="0 0 14 14" fill="none">
+            <circle cx="7" cy="7" r="2" stroke="currentColor" stroke-width="1.2" />
+            <circle cx="2" cy="2" r="1.5" stroke="currentColor" stroke-width="1" />
+            <circle cx="12" cy="2" r="1.5" stroke="currentColor" stroke-width="1" />
+            <circle cx="2" cy="12" r="1.5" stroke="currentColor" stroke-width="1" />
+            <circle cx="12" cy="12" r="1.5" stroke="currentColor" stroke-width="1" />
+            <line x1="3.2" y1="3.2" x2="5.5" y2="5.5" stroke="currentColor" stroke-width="1" />
+            <line x1="10.8" y1="3.2" x2="8.5" y2="5.5" stroke="currentColor" stroke-width="1" />
+            <line x1="3.2" y1="10.8" x2="5.5" y2="8.5" stroke="currentColor" stroke-width="1" />
+            <line x1="10.8" y1="10.8" x2="8.5" y2="8.5" stroke="currentColor" stroke-width="1" />
+          </svg>
+          Topoloji
+        </div>
+        <div class="nav-item" onclick="navTo('analiz')">
+          <svg class="nav-icon" viewBox="0 0 14 14" fill="none">
+            <polyline points="1,11 4,7 7,9 10,4 13,6" stroke="currentColor" stroke-width="1.2" fill="none" />
+          </svg>
+          Stres Analizi
+        </div>
+        <div class="nav-section">Sistem</div>
+        <div class="nav-item" id="nav-kontrol" style="display:none" onclick="navTo('kontrol')">
+          <svg class="nav-icon" viewBox="0 0 14 14" fill="none">
+            <rect x="1" y="5" width="12" height="4" rx="1" stroke="currentColor" stroke-width="1.2" />
+            <circle cx="4" cy="7" r="1" fill="currentColor" />
+          </svg>
+          Kontrol Paneli
+          <span class="nav-badge">ADM</span>
+        </div>
+        <div class="nav-item" onclick="navTo('alarmlar')">
+          <svg class="nav-icon" viewBox="0 0 14 14" fill="none">
+            <path d="M7 1 C4.2 1 2 3.2 2 6 L2 9 L1 10 L13 10 L12 9 L12 6 C12 3.2 9.8 1 7 1Z" stroke="currentColor"
+              stroke-width="1.2" />
+            <line x1="7" y1="10" x2="7" y2="12.5" stroke="currentColor" stroke-width="1.2" />
+          </svg>
+          Alarmlar
+          <span class="nav-badge" id="alarm-badge">3</span>
+        </div>
+
+        <div style="flex:1"></div>
+        <div style="padding:12px 16px;border-top:1px solid var(--border)">
+          <div style="font-size:9px;color:var(--text3);letter-spacing:.8px;margin-bottom:4px;text-transform:uppercase">
+            Bağlantı</div>
+          <div
+            style="font-size:11px;font-family:'JetBrains Mono',monospace;color:var(--ok);display:flex;align-items:center;gap:4px">
+            <span class="live-dot" style="width:5px;height:5px;background:var(--ok)"></span>Güvenli SSL</div>
+        </div>
+      </div>
+
+      <!-- CONTENT AREA -->
+      <div class="content" id="content-area">
+        <!-- Genel Bakış (default) -->
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // ═══════════════════════════
+    //   SIMPLE AUTH (localStorage)
+    // ═══════════════════════════
+    const USERS_KEY = 'sgsa_users';
+    const SESSION_KEY = 'sgsa_session';
+
+    function getUsers() {
+      try { return JSON.parse(localStorage.getItem(USERS_KEY) || '[]') } catch { return [] }
+    }
+    function saveUsers(u) { localStorage.setItem(USERS_KEY, JSON.stringify(u)) }
+    function getSession() {
+      try { return JSON.parse(localStorage.getItem(SESSION_KEY) || 'null') } catch { return null }
+    }
+    function saveSession(s) { localStorage.setItem(SESSION_KEY, JSON.stringify(s)) }
+    function clearSession() { localStorage.removeItem(SESSION_KEY) }
+
+    // Seed default users if none exist
+    (function seedUsers() {
+      const u = getUsers();
+      if (u.length === 0) {
+        saveUsers([
+          { username: 'admin', name: 'Sistem Yöneticisi', password: 'admin123', role: 'admin' },
+          { username: 'muhendis1', name: 'Ahmet Yılmaz', password: 'test123', role: 'muhendis' },
+          { username: 'analist1', name: 'Zeynep Kaya', password: 'test123', role: 'analist' },
+          { username: 'izleyici1', name: 'Mehmet Demir', password: 'test123', role: 'izleyici' },
+        ]);
+      }
+    })();
+
+    let selectedRole = 'izleyici';
+
+    function selectRole(el) {
+      document.querySelectorAll('.role-btn').forEach(b => b.classList.remove('selected'));
+      el.classList.add('selected');
+      selectedRole = el.dataset.role;
+    }
+
+    function showMsg(text, type) {
+      const m = document.getElementById('msg');
+      m.textContent = text; m.className = 'msg ' + type + ' show';
+      setTimeout(() => m.classList.remove('show'), 3500);
+    }
+
+    function switchTab(t) {
+      document.querySelectorAll('.tab').forEach((b, i) => b.classList.toggle('active', i === (t === 'login' ? 0 : 1)));
+      document.getElementById('login-form').style.display = t === 'login' ? 'block' : 'none';
+      document.getElementById('register-form').style.display = t === 'register' ? 'block' : 'none';
+    }
+
+    function doLogin() {
+      const user = document.getElementById('l-user').value.trim();
+      const pass = document.getElementById('l-pass').value;
+      if (!user || !pass) { showMsg('Kullanıcı adı ve şifre giriniz.', 'err'); return }
+      const users = getUsers();
+      const found = users.find(u => u.username === user && u.password === pass);
+      if (!found) { showMsg('Hatalı kullanıcı adı veya şifre.', 'err'); return }
+      saveSession(found);
+      launchDashboard(found);
+    }
+
+    function doRegister() {
+      const name = document.getElementById('r-name').value.trim();
+      const user = document.getElementById('r-user').value.trim();
+      const pass = document.getElementById('r-pass').value;
+      if (!name || !user || !pass) { showMsg('Tüm alanları doldurunuz.', 'err'); return }
+      if (pass.length < 6) { showMsg('Şifre en az 6 karakter olmalıdır.', 'err'); return }
+      if (!/^[a-z0-9_]+$/i.test(user)) { showMsg('Kullanıcı adı sadece harf, rakam ve _ içerebilir.', 'err'); return }
+      if (!selectedRole) { showMsg('Lütfen bir rol seçiniz.', 'err'); return }
+      const users = getUsers();
+      if (users.find(u => u.username === user)) { showMsg('Bu kullanıcı adı zaten alınmış.', 'err'); return }
+      const newUser = { username: user, name, password: pass, role: selectedRole };
+      users.push(newUser); saveUsers(users);
+      showMsg('Kayıt başarılı! Giriş yapılıyor...', 'ok');
+      setTimeout(() => { saveSession(newUser); launchDashboard(newUser) }, 1000);
+    }
+
+    function doLogout() {
+      clearInterval(simInterval);
+      clearSession();
+      document.getElementById('dash-page').classList.remove('active');
+      document.getElementById('login-page').classList.add('active');
+      document.getElementById('l-user').value = '';
+      document.getElementById('l-pass').value = '';
+    }
+
+    // ═══════════════════════════
+    //   DASHBOARD LAUNCH
+    // ═══════════════════════════
+    function launchDashboard(user) {
+      document.getElementById('login-page').classList.remove('active');
+      document.getElementById('dash-page').classList.add('active');
+
+      const initials = user.name.split(' ').map(w => w[0]).join('').slice(0, 2).toUpperCase();
+      document.getElementById('u-avatar').textContent = initials;
+      document.getElementById('u-name').textContent = user.name;
+      const roleLabels = { admin: 'Sistem Yöneticisi', muhendis: 'Mühendis', analist: 'Analist', izleyici: 'İzleyici' };
+      document.getElementById('u-role').textContent = roleLabels[user.role] || user.role;
+
+      if (user.role === 'admin' || user.role === 'muhendis') {
+        document.getElementById('nav-kontrol').style.display = 'flex';
+      }
+
+      currentUser = user;
+      navTo('genel');
+      startSim();
+    }
+
+    // ═══════════════════════════
+    //   SIMULATION DATA
+    // ═══════════════════════════
+    const nodeData = [
+      { id: 'N01', name: 'Merkez İstasyonu', x: 150, y: 110, load: 88, type: 'gen' },
+      { id: 'N02', name: 'Kuzey Substation', x: 80, y: 40, load: 71, type: 'sub' },
+      { id: 'N03', name: 'Güney Substation', x: 220, y: 180, load: 45, type: 'sub' },
+      { id: 'N04', name: 'Doğu Bölge', x: 240, y: 60, load: 92, type: 'load' },
+      { id: 'N05', name: 'Batı Bölge', x: 40, y: 160, load: 67, type: 'load' },
+      { id: 'N06', name: 'Endüstriyel-1', x: 170, y: 30, load: 95, type: 'load' },
+      { id: 'N07', name: 'Endüstriyel-2', x: 280, y: 130, load: 56, type: 'load' },
+      { id: 'N08', name: 'Yenilenebilir-1', x: 50, y: 80, load: 38, type: 'ren' },
+      { id: 'N09', name: 'Yenilenebilir-2', x: 270, y: 190, load: 29, type: 'ren' },
+      { id: 'N10', name: 'Konut-A', x: 120, y: 190, load: 74, type: 'load' },
+      { id: 'N11', name: 'Konut-B', x: 200, y: 140, load: 81, type: 'load' },
+      { id: 'N12', name: 'Acil Yedek', x: 110, y: 70, load: 12, type: 'bak' },
+    ];
+    const edges = [[0, 1], [0, 2], [0, 3], [0, 4], [1, 5], [1, 7], [1, 11], [2, 8], [2, 9], [3, 6], [3, 10], [4, 9], [5, 3], [6, 10], [7, 11], [9, 10]];
+    const nodeLoads = nodeData.map(n => n.load);
+    let timeData = Array.from({ length: 60 }, (_, i) => 40 + 20 * Math.sin(i * .15) + Math.random() * 8);
+    let predData = Array.from({ length: 30 }, (_, i) => 30 + 15 * Math.sin(i * .2) + Math.random() * 5);
+    let events = [];
+    let simInterval = null;
+    let simStep = 0;
+    let currentUser = null;
+    let currentNav = 'genel';
+    let globalLoad = 100, globalVolt = 100;
+
+    function nodeColor(v) { return v > 85 ? '#e84343' : v > 70 ? '#f0a500' : '#3ecf63' }
+    function barColor(v) { return v > 85 ? '#e84343' : v > 70 ? '#f0a500' : '#3ecf63' }
+
+    function addEvent(msg, type) {
+      const t = new Date().toTimeString().slice(0, 8);
+      events.unshift({ t, msg, type });
+      if (events.length > 80) events.pop();
+    }
+
+    function startSim() {
+      if (simInterval) clearInterval(simInterval);
+      addEvent('Sistem başlatıldı — tüm düğümler aktif', 'ok');
+      addEvent('N06 Endüstriyel-1 yüksek yük uyarısı', 'warn');
+      addEvent('N04 Doğu Bölge kritik eşik yakın', 'crit');
+      simInterval = setInterval(tick, 1200);
+    }
+
+    function tick() {
+      simStep++;
+      nodeLoads.forEach((_, i) => {
+        const delta = (Math.random() - .48) * 2.5 * (globalLoad / 100);
+        nodeLoads[i] = Math.max(5, Math.min(100, nodeLoads[i] + delta));
+      });
+      const avg = nodeLoads.reduce((a, b) => a + b, 0) / nodeLoads.length;
+      const risk = Math.min(99, Math.max(4, avg * .4 + Math.random() * 12 + (nodeLoads.filter(v => v > 85).length * 7)));
+      const freq = 49.95 + (Math.random() - .5) * .12 * (globalLoad / 100);
+      const volt = (220 + Math.random() * 12 * (globalVolt / 100));
+      timeData.push(avg); if (timeData.length > 60) timeData.shift();
+      predData = Array.from({ length: 30 }, (_, i) => Math.min(99, risk + i * .35 + Math.sin(i * .25) * 7 + Math.random() * 5));
+
+      if (simStep % 8 === 0) {
+        const over = nodeData.filter((_, i) => nodeLoads[i] > 90);
+        if (over.length > 0) addEvent(`${over[0].name} aşırı yük (${nodeLoads[nodeData.indexOf(over[0])].toFixed(0)}%)`, 'crit');
+        else if (Math.random() < .35) addEvent(`Ortalama yük %${avg.toFixed(0)} — sistem stabil`, 'ok');
+        else addEvent(`Frekans ${freq.toFixed(3)} Hz — hat kapasitesi izleniyor`, 'warn');
+      }
+
+      document.getElementById('alarm-badge').textContent = nodeLoads.filter(v => v > 85).length;
+
+      if (currentNav === 'genel') renderGenel(avg, risk, freq, volt);
+      else if (currentNav === 'topoloji') renderTopoloji();
+      else if (currentNav === 'analiz') renderAnaliz(risk, freq, volt);
+      else if (currentNav === 'alarmlar') renderAlarmlar();
+    }
+
+    // ═══════════════════════════
+    //   NAVIGATION
+    // ═══════════════════════════
+    function navTo(id) {
+      currentNav = id;
+      document.querySelectorAll('.nav-item').forEach(el => {
+        el.classList.toggle('active', el.getAttribute('onclick') && el.getAttribute('onclick').includes("'" + id + "'"));
+      });
+      const ca = document.getElementById('content-area');
+      ca.innerHTML = '<div class="fade-in" id="view-wrap"></div>';
+      const avg = nodeLoads.reduce((a, b) => a + b, 0) / nodeLoads.length;
+      const risk = Math.min(99, avg * .4 + 15);
+      const freq = 49.97; const volt = 228;
+      if (id === 'genel') renderGenel(avg, risk, freq, volt);
+      else if (id === 'topoloji') renderTopoloji();
+      else if (id === 'analiz') renderAnaliz(risk, freq, volt);
+      else if (id === 'kontrol') renderKontrol();
+      else if (id === 'alarmlar') renderAlarmlar();
+    }
+
+    function wrap() { return document.getElementById('view-wrap') }
+
+    // ═══════════════════════════
+    //   VIEW: GENEL
+    // ═══════════════════════════
+    function renderGenel(avg, risk, freq, volt) {
+      const alarms = nodeLoads.filter(v => v > 85).length;
+      if (!document.getElementById('genel-root')) {
+        wrap().innerHTML = `
+      <div id="genel-root">
+        <div class="stat-row" id="stat-row"></div>
+        <div class="grid-2" style="margin-top:8px">
+          <div class="panel">
+            <div class="panel-title">Stres Zaman Serisi</div>
+            <div style="position:relative;height:180px"><canvas id="cv-time" aria-label="Şebeke stres zaman serisi" role="img"></canvas></div>
+          </div>
+          <div class="panel">
+            <div class="panel-title">Düğüm Stres Durumu</div>
+            <div id="node-list-g"></div>
+          </div>
+        </div>
+        <div class="grid-2" style="margin-top:8px">
+          <div class="panel">
+            <div class="panel-title">Çökme Tahmin Modeli</div>
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
+              <div style="font-size:11px;color:var(--text2)">Anlık Risk Skoru</div>
+              <span id="risk-label" class="badge badge-warn">--</span>
+            </div>
+            <div class="risk-track"><div class="risk-thumb" id="risk-thumb" style="left:34%"></div></div>
+            <div style="display:flex;justify-content:space-between;font-size:9px;color:var(--text3);font-family:'JetBrains Mono',monospace;margin-bottom:8px"><span>Güvenli</span><span>Uyarı</span><span>Kritik</span></div>
+            <div style="position:relative;height:120px"><canvas id="cv-pred" aria-label="Çökme risk tahmini" role="img"></canvas></div>
+          </div>
+          <div class="panel">
+            <div class="panel-title">Olay Günlüğü</div>
+            <div id="ev-log" style="max-height:200px;overflow-y:auto"></div>
+          </div>
+        </div>
+      </div>`;
+        setTimeout(() => { drawTime(); drawPred(); }, 50);
+      }
+
+      // Stats
+      document.getElementById('stat-row').innerHTML = `
+    <div class="stat-card ${avg > 80 ? 'crit' : avg > 65 ? 'warn' : 'ok'}">
+      <div class="stat-val" style="color:${avg > 80 ? 'var(--crit)' : avg > 65 ? 'var(--warn)' : 'var(--ok)'}">${avg.toFixed(1)}%</div>
+      <div class="stat-lbl">Şebeke Yükü</div></div>
+    <div class="stat-card ${Math.abs(volt - 228) > 8 ? 'warn' : 'ok'}">
+      <div class="stat-val" style="color:${Math.abs(volt - 228) > 8 ? 'var(--warn)' : 'var(--ok)'}">${Math.round(volt)}V</div>
+      <div class="stat-lbl">Ortalama Voltaj</div></div>
+    <div class="stat-card blue">
+      <div class="stat-val" style="color:var(--accent2)">${freq.toFixed(2)}</div>
+      <div class="stat-lbl">Frekans (Hz)</div></div>
+    <div class="stat-card ${risk > 70 ? 'crit' : risk > 40 ? 'warn' : 'ok'}">
+      <div class="stat-val" style="color:${risk > 70 ? 'var(--crit)' : risk > 40 ? 'var(--warn)' : 'var(--ok)'}">${Math.round(risk)}%</div>
+      <div class="stat-lbl">Çökme Riski</div></div>
+    <div class="stat-card ok">
+      <div class="stat-val">${nodeLoads.length}</div>
+      <div class="stat-lbl">Aktif Düğüm</div></div>
+    <div class="stat-card ${alarms > 0 ? 'crit' : 'ok'}">
+      <div class="stat-val" style="color:${alarms > 0 ? 'var(--crit)' : 'var(--ok)'}">${alarms}</div>
+      <div class="stat-lbl">Aktif Alarm</div></div>`;
+
+      // Node list
+      const sorted = [...nodeData.map((n, i) => ({ ...n, load: nodeLoads[i] }))].sort((a, b) => b.load - a.load).slice(0, 8);
+      document.getElementById('node-list-g').innerHTML = sorted.map(n => `
+    <div class="node-item">
+      <span class="node-id">${n.id}</span>
+      <span class="node-name">${n.name}</span>
+      <div class="bar-wrap"><div class="bar-fill" style="width:${n.load.toFixed(0)}%;background:${barColor(n.load)}"></div></div>
+      <span class="node-pct" style="color:${barColor(n.load)}">${n.load.toFixed(0)}%</span>
+    </div>`).join('');
+
+      // Risk
+      const rt = document.getElementById('risk-thumb');
+      const rl = document.getElementById('risk-label');
+      if (rt) rt.style.left = Math.round(risk) + '%';
+      if (rl) { rl.textContent = Math.round(risk) + '%'; rl.className = 'badge ' + (risk > 70 ? 'badge-crit' : risk > 40 ? 'badge-warn' : 'badge-ok') }
+
+      // Events
+      const el = document.getElementById('ev-log');
+      if (el) el.innerHTML = events.slice(0, 15).map(e => `
+    <div class="event-item">
+      <span class="evt-time">${e.t}</span>
+      <span class="evt-dot" style="background:${e.type === 'crit' ? 'var(--crit)' : e.type === 'warn' ? 'var(--warn)' : 'var(--ok)'}"></span>
+      <span class="evt-msg">${e.msg}</span>
+    </div>`).join('');
+
+      drawTime(); drawPred();
+    }
+
+    function drawTime() {
+      const cv = document.getElementById('cv-time');
+      if (!cv) return;
+      const W = cv.offsetWidth || cv.parentElement.offsetWidth || 400;
+      cv.width = W; cv.height = 180;
+      const ctx = cv.getContext('2d');
+      ctx.clearRect(0, 0, W, 180);
+      const pad = 32, bot = 20, top = 8, dh = 180 - bot - top;
+      const dw = (W - pad - 8) / (timeData.length - 1);
+      const toY = v => top + (1 - v / 100) * dh;
+      ctx.strokeStyle = '#1a2a3a'; ctx.lineWidth = .5;
+      [25, 50, 75].forEach(v => {
+        ctx.beginPath(); ctx.moveTo(pad, toY(v)); ctx.lineTo(W - 4, toY(v)); ctx.stroke();
+        ctx.fillStyle = '#3d5a70'; ctx.font = '9px JetBrains Mono,monospace'; ctx.textAlign = 'right'; ctx.fillText(v + '%', pad - 4, toY(v) + 3);
+      });
+      const g = ctx.createLinearGradient(0, top, 0, 180 - bot);
+      g.addColorStop(0, 'rgba(240,165,0,.2)'); g.addColorStop(1, 'rgba(240,165,0,.01)');
+      ctx.beginPath(); ctx.moveTo(pad, toY(timeData[0]));
+      timeData.forEach((v, i) => ctx.lineTo(pad + i * dw, toY(v)));
+      ctx.lineTo(pad + (timeData.length - 1) * dw, 180 - bot); ctx.lineTo(pad, 180 - bot); ctx.closePath(); ctx.fillStyle = g; ctx.fill();
+      ctx.beginPath(); timeData.forEach((v, i) => { const x = pad + i * dw, y = toY(v); i === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y); });
+      ctx.strokeStyle = '#f0a500'; ctx.lineWidth = 1.5; ctx.stroke();
+      const lv = timeData[timeData.length - 1];
+      ctx.beginPath(); ctx.arc(pad + (timeData.length - 1) * dw, toY(lv), 4, 0, 2 * Math.PI);
+      ctx.fillStyle = lv > 85 ? '#e84343' : lv > 70 ? '#f0a500' : '#3ecf63'; ctx.fill();
+    }
+
+    function drawPred() {
+      const cv = document.getElementById('cv-pred');
+      if (!cv) return;
+      const W = cv.offsetWidth || cv.parentElement.offsetWidth || 350;
+      cv.width = W; cv.height = 120;
+      const ctx = cv.getContext('2d');
+      ctx.clearRect(0, 0, W, 120);
+      const pad = 28, bot = 16, top = 6, dh = 120 - bot - top;
+      const dw = (W - pad - 6) / (predData.length - 1);
+      const toY = v => top + (1 - v / 100) * dh;
+      ctx.strokeStyle = '#1a2a3a'; ctx.lineWidth = .5;
+      [25, 50, 75].forEach(v => {
+        ctx.beginPath(); ctx.moveTo(pad, toY(v)); ctx.lineTo(W - 4, toY(v)); ctx.stroke();
+        ctx.fillStyle = '#3d5a70'; ctx.font = '9px JetBrains Mono,monospace'; ctx.textAlign = 'right'; ctx.fillText(v + '%', pad - 4, toY(v) + 3);
+      });
+      const up = predData.map(v => Math.min(100, v + 6 + Math.random() * 4));
+      const lo = predData.map(v => Math.max(0, v - 6 - Math.random() * 3));
+      ctx.beginPath(); up.forEach((v, i) => { const x = pad + i * dw; i === 0 ? ctx.moveTo(x, toY(v)) : ctx.lineTo(x, toY(v)); });
+      lo.reverse().forEach((v, i) => { ctx.lineTo(pad + (predData.length - 1 - i) * dw, toY(v)); });
+      ctx.closePath(); ctx.fillStyle = 'rgba(240,165,0,.08)'; ctx.fill();
+      ctx.beginPath(); predData.forEach((v, i) => { const x = pad + i * dw, y = toY(v); i === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y); });
+      ctx.setLineDash([5, 4]); ctx.strokeStyle = '#f0a500'; ctx.lineWidth = 1.5; ctx.stroke(); ctx.setLineDash([]);
+      ctx.fillStyle = '#3d5a70'; ctx.font = '9px JetBrains Mono,monospace'; ctx.textAlign = 'center';
+      ['0s', '10s', '20s', '30s'].forEach((t, i) => ctx.fillText(t, pad + i * (dw * 10), 120 - 2));
+    }
+
+    // ═══════════════════════════
+    //   VIEW: TOPOLOJİ
+    // ═══════════════════════════
+    function renderTopoloji() {
+      wrap().innerHTML = `
+    <div class="panel" style="padding:1.25rem">
+      <div class="panel-title">Şebeke Topoloji Haritası</div>
+      <div style="display:flex;gap:12px;flex-wrap:wrap;margin-bottom:12px">
+        <span style="font-size:11px;color:var(--text2);display:flex;align-items:center;gap:4px"><span style="width:10px;height:3px;background:var(--ok);display:inline-block;border-radius:1px"></span>Normal</span>
+        <span style="font-size:11px;color:var(--text2);display:flex;align-items:center;gap:4px"><span style="width:10px;height:3px;background:var(--warn);display:inline-block;border-radius:1px"></span>Yüksek Yük</span>
+        <span style="font-size:11px;color:var(--text2);display:flex;align-items:center;gap:4px"><span style="width:10px;height:3px;background:var(--crit);display:inline-block;border-radius:1px"></span>Kritik</span>
+        <span style="font-size:11px;color:var(--text2);display:flex;align-items:center;gap:4px"><span style="width:10px;height:10px;border-radius:50%;background:rgba(0,212,170,.3);display:inline-block"></span>Üretim</span>
+        <span style="font-size:11px;color:var(--text2);display:flex;align-items:center;gap:4px"><span style="width:10px;height:10px;border-radius:50%;background:rgba(0,151,212,.3);display:inline-block"></span>Yenilenebilir</span>
+      </div>
+      <div style="position:relative;width:100%;height:360px"><canvas id="cv-topo" role="img" aria-label="Şebeke topoloji haritası"></canvas></div>
+    </div>
+    <div class="grid-2" style="margin-top:8px">
+      ${nodeData.map((n, i) => `
+        <div class="stat-card ${nodeLoads[i] > 85 ? 'crit' : nodeLoads[i] > 70 ? 'warn' : 'ok'}" style="display:flex;align-items:center;gap:10px;padding:.6rem 1rem">
+          <div style="width:8px;height:8px;border-radius:50%;background:${barColor(nodeLoads[i])};flex-shrink:0"></div>
+          <div style="flex:1"><div style="font-size:12px;font-weight:600">${n.name}</div><div style="font-size:9px;color:var(--text2);letter-spacing:.5px">${n.id} · ${{ gen: 'Üretim', sub: 'Trafo', load: 'Tüketim', ren: 'Yenilenebilir', bak: 'Yedek' }[n.type]}</div></div>
+          <div style="font-family:'JetBrains Mono',monospace;font-size:14px;color:${barColor(nodeLoads[i])};font-weight:700">${nodeLoads[i].toFixed(0)}%</div>
+        </div>`).join('')}
+    </div>`;
+      setTimeout(() => {
+        const cv = document.getElementById('cv-topo');
+        if (!cv) return;
+        const W = cv.offsetWidth || cv.parentElement.offsetWidth || 600;
+        cv.width = W; cv.height = 360;
+        const ctx = cv.getContext('2d');
+        const scx = W / 320, scy = 360 / 230;
+        ctx.clearRect(0, 0, W, 360);
+        edges.forEach(([a, b]) => {
+          const na = nodeData[a], nb = nodeData[b];
+          const lv = Math.max(nodeLoads[a], nodeLoads[b]);
+          ctx.beginPath(); ctx.moveTo(na.x * scx, na.y * scy); ctx.lineTo(nb.x * scx, nb.y * scy);
+          ctx.strokeStyle = lv > 85 ? 'rgba(232,67,67,.5)' : lv > 70 ? 'rgba(240,165,0,.45)' : 'rgba(62,207,99,.35)';
+          ctx.lineWidth = lv > 85 ? 2.5 : 1.5; ctx.stroke();
+        });
+        nodeData.forEach((n, i) => {
+          const x = n.x * scx, y = n.y * scy;
+          const r = n.type === 'gen' ? 12 : n.type === 'bak' ? 7 : 9;
+          if (n.type === 'gen') { ctx.beginPath(); ctx.arc(x, y, r + 5, 0, 2 * Math.PI); ctx.strokeStyle = nodeColor(nodeLoads[i]); ctx.lineWidth = 1; ctx.setLineDash([3, 3]); ctx.stroke(); ctx.setLineDash([]) }
+          ctx.beginPath(); ctx.arc(x, y, r, 0, 2 * Math.PI);
+          ctx.fillStyle = nodeColor(nodeLoads[i]); ctx.fill();
+          ctx.strokeStyle = 'rgba(0,0,0,.5)'; ctx.lineWidth = 1; ctx.stroke();
+          ctx.fillStyle = 'rgba(201,214,223,.75)'; ctx.font = `bold 10px JetBrains Mono,monospace`; ctx.textAlign = 'center';
+          ctx.fillText(n.id, x, y + r + 12);
+        });
+      }, 60);
+    }
+
+    // ═══════════════════════════
+    //   VIEW: ANALİZ
+    // ═══════════════════════════
+    function renderAnaliz(risk, freq, volt) {
+      const avg = nodeLoads.reduce((a, b) => a + b, 0) / nodeLoads.length;
+      wrap().innerHTML = `
+    <div class="grid-2">
+      <div class="panel">
+        <div class="panel-title">Stres Dağılım Haritası (Histogram)</div>
+        <div style="position:relative;height:200px"><canvas id="cv-hist" role="img" aria-label="Yük dağılım histogramı"></canvas></div>
+      </div>
+      <div class="panel">
+        <div class="panel-title">Frekans & Voltaj Analizi</div>
+        <div style="position:relative;height:200px"><canvas id="cv-fv" role="img" aria-label="Frekans voltaj analizi"></canvas></div>
+      </div>
+    </div>
+    <div class="panel" style="margin-top:8px">
+      <div class="panel-title">Risk Faktörleri Matrisi</div>
+      <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-top:4px">
+        ${[
+          { label: 'Yük Dengesizliği', val: Math.round(avg * .8 + Math.random() * 10), unit: '%' },
+          { label: 'Voltaj Sapması', val: Math.round(Math.abs(volt - 228) / .8 + 5), unit: '%' },
+          { label: 'Frekans Drift', val: Math.round(Math.abs(freq - 50) * 200 + 5), unit: '%' },
+          { label: 'Hat Kapasitesi', val: Math.round(avg + Math.random() * 10), unit: '%' },
+          { label: 'Yük Faktörü', val: (0.65 + Math.random() * .2).toFixed(2), unit: '' },
+          { label: 'Güç Faktörü', val: (0.88 + Math.random() * .06).toFixed(2), unit: '' },
+          { label: 'Arıza Skoru', val: Math.round(risk * .6 + Math.random() * 8), unit: '%' },
+          { label: 'Tahmin Güveni', val: Math.round(75 + Math.random() * 18), unit: '%' },
+        ].map(f => `
+          <div class="stat-card">
+            <div class="stat-val" style="font-size:18px">${f.val}${f.unit}</div>
+            <div class="stat-lbl">${f.label}</div>
+          </div>`).join('')}
+      </div>
+    </div>`;
+      setTimeout(() => {
+        // Histogram
+        const h = document.getElementById('cv-hist');
+        if (h) {
+          const W = h.offsetWidth || 300; h.width = W; h.height = 200;
+          const ctx = h.getContext('2d');
+          ctx.clearRect(0, 0, W, 200);
+          const bins = Array(10).fill(0);
+          nodeLoads.forEach(v => { const b = Math.min(9, Math.floor(v / 10)); bins[b]++; });
+          const maxB = Math.max(...bins) || 1;
+          const bw = (W - 40) / (bins.length);
+          bins.forEach((v, i) => {
+            const x = 32 + i * bw, bh = (v / maxB) * 155;
+            const pct = i * 10;
+            ctx.fillStyle = pct >= 80 ? 'rgba(232,67,67,.7)' : pct >= 60 ? 'rgba(240,165,0,.7)' : 'rgba(62,207,99,.6)';
+            ctx.fillRect(x + 2, 8 + 155 - bh, bw - 4, bh);
+            ctx.fillStyle = '#3d5a70'; ctx.font = '9px JetBrains Mono,monospace'; ctx.textAlign = 'center';
+            ctx.fillText((pct) + '-' + (pct + 9) + '%', x + bw / 2, 195);
+            if (v > 0) { ctx.fillStyle = '#c9d6df'; ctx.fillText(v, x + bw / 2, 8 + 155 - bh - 3); }
+          });
+        }
+        // FV scatter-like
+        const fv = document.getElementById('cv-fv');
+        if (fv) {
+          const W = fv.offsetWidth || 300; fv.width = W; fv.height = 200;
+          const ctx = fv.getContext('2d');
+          ctx.clearRect(0, 0, W, 200);
+          const pad = 36;
+          ctx.strokeStyle = '#1a2a3a'; ctx.lineWidth = .5;
+          [0, 50, 100].forEach(pct => {
+            const y = 10 + (1 - pct / 100) * 165;
+            ctx.beginPath(); ctx.moveTo(pad, y); ctx.lineTo(W - 6, y); ctx.stroke();
+            ctx.fillStyle = '#3d5a70'; ctx.font = '9px JetBrains Mono,monospace'; ctx.textAlign = 'right';
+            ctx.fillText(pct + '%', pad - 4, y + 3);
+          });
+          const pts = Array.from({ length: 40 }, () => ({ x: Math.random(), y: Math.random(), c: Math.random() }));
+          pts.forEach(p => {
+            const x = pad + p.x * (W - pad - 10), y = 10 + p.y * 155;
+            ctx.beginPath(); ctx.arc(x, y, 3.5, 0, 2 * Math.PI);
+            ctx.fillStyle = p.c > .7 ? 'rgba(232,67,67,.75)' : p.c > .4 ? 'rgba(240,165,0,.75)' : 'rgba(62,207,99,.75)';
+            ctx.fill();
+          });
+          ctx.fillStyle = 'rgba(201,214,223,.5)'; ctx.font = '10px Rajdhani,sans-serif';
+          ctx.textAlign = 'center'; ctx.fillText('Voltaj vs Frekans korelasyon dağılımı', W / 2, 195);
+        }
+      }, 60);
+    }
+
+    // ═══════════════════════════
+    //   VIEW: KONTROL (admin/muhendis)
+    // ═══════════════════════════
+    function renderKontrol() {
+      const isAdmin = currentUser && currentUser.role === 'admin';
+      const isMuh = currentUser && currentUser.role === 'muhendis';
+      if (!isAdmin && !isMuh) {
+        wrap().innerHTML = `<div class="panel"><div style="color:var(--crit);font-size:14px;font-weight:600">Erişim Reddedildi</div><div style="color:var(--text2);font-size:12px;margin-top:4px">Bu bölüm sadece Admin ve Mühendis rolleri için erişilebilir.</div></div>`;
+        return;
+      }
+      wrap().innerHTML = `
+    ${isAdmin ? '' : ' <div class="readonly-notice"><svg width="14" height="14" viewBox="0 0 14 14" fill="none"><circle cx="7" cy="7" r="6" stroke="#0097d4" stroke-width="1.2"/><line x1="7" y1="4" x2="7" y2="7" stroke="#0097d4" stroke-width="1.2" stroke-linecap="round"/><circle cx="7" cy="9.5" r=".7" fill="#0097d4"/></svg> Mühendis görünümü — bazı kontroller yalnızca Admin tarafından kullanılabilir.</div>'}
+    <div class="panel">
+      <div class="panel-title">Şebeke Parametre Kontrolleri</div>
+      <div class="control-grid">
+        <div class="ctrl-item">
+          <div class="ctrl-label">Genel Yük Seviyesi</div>
+          <input type="range" class="ctrl-slider" id="sl-load" min="20" max="150" value="100" oninput="globalLoad=+this.value;document.getElementById('cv-load').textContent=this.value+'%'">
+          <div class="ctrl-val" id="cv-load">100%</div>
+        </div>
+        <div class="ctrl-item">
+          <div class="ctrl-label">Voltaj Katsayısı</div>
+          <input type="range" class="ctrl-slider" id="sl-volt" min="50" max="130" value="100" oninput="globalVolt=+this.value;document.getElementById('cv-volt').textContent=this.value+'%'" ${!isAdmin ? 'disabled' : ''}>
+          <div class="ctrl-val" id="cv-volt">${isAdmin ? '100%' : '— (Sadece Admin)'}</div>
+        </div>
+        <div class="ctrl-item">
+          <div class="ctrl-label">Simülasyon Hızı</div>
+          <input type="range" class="ctrl-slider" id="sl-speed" min="500" max="4000" step="100" value="1200" oninput="clearInterval(simInterval);simInterval=setInterval(tick,+this.value);document.getElementById('cv-speed').textContent=(+this.value/1000).toFixed(1)+'s'">
+          <div class="ctrl-val" id="cv-speed">1.2s</div>
+        </div>
+        <div class="ctrl-item">
+          <div class="ctrl-label">Alarm Eşiği</div>
+          <input type="range" class="ctrl-slider" id="sl-thresh" min="50" max="95" value="85" oninput="document.getElementById('cv-thresh').textContent=this.value+'%'" ${!isAdmin ? 'disabled' : ''}>
+          <div class="ctrl-val" id="cv-thresh">${isAdmin ? '85%' : '— (Sadece Admin)'}</div>
+        </div>
+      </div>
+    </div>
+    ${isAdmin ? `
+    <div class="panel" style="margin-top:8px">
+      <div class="panel-title">Admin — Kullanıcı Yönetimi</div>
+      <div id="user-table"></div>
+      <button class="ctrl-btn danger" style="margin-top:12px" onclick="if(confirm('Tüm kullanıcılar sıfırlanacak. Emin misiniz?')){localStorage.removeItem('${USERS_KEY}');location.reload()}">Kullanıcıları Sıfırla</button>
+    </div>`: ''}`;
+
+      if (isAdmin) {
+        const users = getUsers();
+        document.getElementById('user-table').innerHTML = `
+      <table style="width:100%;font-size:12px;border-collapse:collapse">
+        <thead><tr style="border-bottom:1px solid var(--border)">
+          ${['Kullanıcı Adı', 'Ad Soyad', 'Rol', 'İşlem'].map(h => `<th style="text-align:left;padding:6px 8px;font-size:9px;letter-spacing:1px;color:var(--text3);text-transform:uppercase">${h}</th>`).join('')}
+        </tr></thead>
+        <tbody>${users.map((u, i) => `
+          <tr style="border-bottom:1px solid var(--border)">
+            <td style="padding:7px 8px;font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--accent)">${u.username}</td>
+            <td style="padding:7px 8px">${u.name}</td>
+            <td style="padding:7px 8px"><span class="badge badge-info">${u.role}</span></td>
+            <td style="padding:7px 8px"><button class="ctrl-btn danger" style="padding:3px 8px;font-size:10px" onclick="delUser(${i})">Sil</button></td>
+          </tr>`).join('')}
+        </tbody>
+      </table>`;
+      }
+    }
+
+    function delUser(idx) {
+      if (!confirm('Kullanıcı silinecek. Emin misiniz?')) return;
+      const users = getUsers(); users.splice(idx, 1); saveUsers(users); renderKontrol();
+    }
+
+    // ═══════════════════════════
+    //   VIEW: ALARMLAR
+    // ═══════════════════════════
+    function renderAlarmlar() {
+      const alarms = nodeData.map((n, i) => ({ ...n, load: nodeLoads[i] })).filter(n => n.load > 70).sort((a, b) => b.load - a.load);
+      wrap().innerHTML = `
+    <div class="panel">
+      <div class="panel-title">Aktif Alarmlar ve Uyarılar</div>
+      ${alarms.length === 0 ? `<div style="color:var(--ok);font-size:13px;padding:1rem 0">Tüm düğümler normal aralıkta çalışıyor.</div>`
+          : alarms.map(n => `
+          <div style="display:flex;align-items:center;gap:12px;padding:10px 0;border-bottom:1px solid var(--border)">
+            <div style="width:36px;height:36px;border-radius:3px;background:${n.load > 85 ? 'rgba(232,67,67,.12)' : 'rgba(240,165,0,.12)'};border:1px solid ${n.load > 85 ? 'rgba(232,67,67,.3)' : 'rgba(240,165,0,.3)'};display:flex;align-items:center;justify-content:center;font-family:'JetBrains Mono',monospace;font-size:10px;font-weight:700;color:${n.load > 85 ? 'var(--crit)' : 'var(--warn)'}">
+              ${n.id}
+            </div>
+            <div style="flex:1">
+              <div style="font-size:14px;font-weight:600;color:var(--text)">${n.name}</div>
+              <div style="font-size:11px;color:var(--text2);margin-top:2px">
+                Yük: <span style="color:${barColor(n.load)};font-family:'JetBrains Mono',monospace">${n.load.toFixed(0)}%</span>
+                &nbsp;·&nbsp; Tip: ${{ 'gen': 'Üretim İstasyonu', 'sub': 'Trafo Merkezi', 'load': 'Tüketim Noktası', 'ren': 'Yenilenebilir Kaynak', 'bak': 'Yedek Sistem' }[n.type]}
+              </div>
+            </div>
+            <span class="badge ${n.load > 85 ? 'badge-crit' : 'badge-warn'}">${n.load > 85 ? 'KRİTİK' : 'UYARI'}</span>
+          </div>`).join('')}
+    </div>
+    <div class="panel" style="margin-top:8px">
+      <div class="panel-title">Son Olaylar</div>
+      <div>${events.slice(0, 20).map(e => `
+        <div class="event-item">
+          <span class="evt-time">${e.t}</span>
+          <span class="evt-dot" style="background:${e.type === 'crit' ? 'var(--crit)' : e.type === 'warn' ? 'var(--warn)' : 'var(--ok)'}"></span>
+          <span class="evt-msg">${e.msg}</span>
+        </div>`).join('')}
+      </div>
+    </div>`;
+    }
+
+    // ═══════════════════════════
+    //   CLOCK
+    // ═══════════════════════════
+    setInterval(() => {
+      const t = new Date().toTimeString().slice(0, 8);
+      const lc = document.getElementById('login-clock');
+      const dc = document.getElementById('dash-clock');
+      if (lc) lc.textContent = t;
+      if (dc) dc.textContent = t;
+    }, 1000);
+
+    // ═══════════════════════════
+    //   ENTER KEY SUPPORT
+    // ═══════════════════════════
+    document.addEventListener('keydown', e => {
+      if (e.key === 'Enter') {
+        const lp = document.getElementById('login-page');
+        if (lp && lp.classList.contains('active')) {
+          const lf = document.getElementById('login-form');
+          if (lf && lf.style.display !== 'none') doLogin();
+          else doRegister();
+        }
+      }
+    });
+
+    // ═══════════════════════════
+    //   AUTO-LOGIN IF SESSION
+    // ═══════════════════════════
+    (function autoLogin() {
+      const s = getSession();
+      if (s) { launchDashboard(s); }
+    })();
+  </script>
+</body>
+
+</html>
