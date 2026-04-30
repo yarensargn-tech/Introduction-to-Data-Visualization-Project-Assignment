@@ -1,121 +1,275 @@
-# AI Asistan Kampusu
+#  SGSA — Akıllı Şebeke Stres Analiz Sistemi
 
-<div align="center">
+<p align="center">
+  <b>Gerçek zamanlı şebeke simülasyonu • Risk analizi • Modern dashboard</b>
+</p>
 
-### Sekilli Sukullu Ogrenci Baslangic Rehberi
+##  İçindekiler
 
-`Local AI + Cloud AI = Daha hizli ogrenme`
+- Proje Hakkında  
+- Özellikler  
+- Kullanıcı Rolleri  
+- Ekranlar  
+- Teknolojiler  
+- Kurulum  
+- Kullanım  
+- Simülasyon Mantığı  
+- Veri Yapısı  
+- Güvenlik Notları  
+- Gelecek Geliştirmeler  
+- Lisans  
 
-[![Ollama](https://img.shields.io/badge/Ollama-Local%20LLM-111827?style=for-the-badge)](https://docs.ollama.com/quickstart)
-[![Gemini 3 Preview](https://img.shields.io/badge/Gemini%203-Preview-0f766e?style=for-the-badge)](https://docs.cloud.google.com/vertex-ai/generative-ai/docs/start/get-started-with-gemini-3)
-[![Google Cloud](https://img.shields.io/badge/Google%20Cloud-Vertex%20AI-1a73e8?style=for-the-badge)](https://docs.cloud.google.com/vertex-ai/generative-ai/docs/start/quickstart)
+---
 
-</div>
+##  Proje Hakkında
 
-```text
- ____  ____     _   _ _____ _   _ _  __      _    ____ ___ _
-|  _ \|  _ \   | | | |  ___| | | | |/ /     / \  / ___|_ _| |
-| | | | |_) |  | | | | |_  | | | | ' /     / _ \ \___ \| || |
-| |_| |  _ <   | |_| |  _| | |_| | . \    / ___ \ ___) | || |___
-|____/|_| \_\   \___/|_|    \___/|_|\_\  /_/   \_\____/___|_____|
-K   K  L      U   U  BBBB   EEEEE         H   H   OOO    SSSS          GGG   EEEEE  L      DDDD   IIIII  N   N           !
-K  K   L      U   U  B   B  E             H   H  O   O  S             G      E      L      D   D    I    NN  N           !
-KKK    L      U   U  BBBB   EEE           HHHHH  O   O   SSS          G  GG  EEE    L      D   D    I    N N N           !
-K  K   L      U   U  B   B  E             H   H  O   O      S         G   G  E      L      D   D    I    N  NN
-K   K  LLLLL   UUU   BBBB   EEEEE         H   H   OOO   SSSS           GGG   EEEEE  LLLLL  DDDD   IIIII  N   N           !
-```
+**SGSA (Smart Grid Stress Analyzer)**, modern elektrik şebekelerinde oluşabilecek yük dengesizliklerini, sistem stresini ve olası çökme risklerini analiz etmek amacıyla geliştirilmiş, tamamen tarayıcı üzerinde çalışan bir simülasyon ve görselleştirme platformudur.
 
-> [!IMPORTANT]
-> Gemini 3 preview "indirilen bir program" degil, Google Cloud Vertex AI uzerinden API ile kullanilan bir model ailesidir.
+Günümüz enerji altyapıları, artan tüketim, yenilenebilir enerji entegrasyonu ve dağıtık üretim gibi faktörler nedeniyle giderek daha karmaşık hale gelmektedir. Bu karmaşıklık, sistem üzerinde anlık yük dalgalanmaları ve kritik stres durumları oluşturabilir. SGSA, bu tür durumları **basitleştirilmiş ancak gerçekçi bir model ile simüle ederek** kullanıcıya anlaşılır ve etkileşimli bir analiz ortamı sunar.
 
-## 0) Ogrenci Icin Tek Adim
+###  Projenin Temel Amaçları
 
-1. Ollama'yi bir kez kur: https://docs.ollama.com/windows models kısmına gir https://ollama.com/library  ve gemini 3 preview cloud modelinini çalıştır yetki giriş gerekecek. ollama artık lokalinde bir LLM olarak sana hizmet vermeye hazır .
+- Şebeke davranışını gerçek zamanlı olarak modellemek  
+- Kritik yük noktalarını (node) tespit etmek  
+- Sistem genelinde stres seviyesini ölçmek  
+- Olası çökme (failure) senaryolarını öngörmek  
+- Kullanıcıya görsel ve sezgisel bir kontrol paneli sağlamak  
 
-2. Bu klasorde sadece `BASLAT.bat` calistir.
-3. Hepsi bu kadar.
+---
 
-> [!IMPORTANT]
-> Ogrenci tarafinda ekstra komut gerekmez. `BASLAT.bat` gerekli durumda `kurulum.bat` dosyasini otomatik cagirir ve ortami kendi kurar.
+###  Nasıl Çalışır?
 
-## 1) BASLAT Calisinca Ne Oluyor?
+SGSA, arka planda çalışan bir **simülasyon motoru** ile sistem davranışını üretir:
 
-1. `BASLAT.bat` önce `.venv` var mi kontrol eder.
-2. Yoksa `kurulum.bat` otomatik calisir; Python 3 kontrolu, `.venv` olusturma, `pip` guncelleme ve `requirements.txt` paket kurulumu yapilir.
-3. Sonra `main.pyw` arka planda acilir.
-4. Uygulama varsayilan olarak `gemma3:1b` modeliyle Ollama'ya istek atar.
+- Her düğüm (node), belirli bir yük değeri (%0–100) taşır  
+- Bu değerler zamanla rastgele ancak kontrollü şekilde değişir  
+- Tüm düğümlerin ortalaması alınarak sistem yükü hesaplanır  
+- Kritik eşiklerin aşılması durumunda alarm mekanizması tetiklenir  
+- Risk skoru; yük, dengesizlik ve kritik node sayısına göre belirlenir  
 
-Ollama API varsayilan adresi: `http://localhost:11434`
+Bu süreç yaklaşık **her 1.2 saniyede bir güncellenir** ve kullanıcı arayüzüne anlık olarak yansıtılır.
 
-## 2) Google Cloud Gemini 3 Preview (Vertex AI)
+---
 
-### Once gerekli olanlar
-- Google Cloud projesi
-- Billing acik olmali
-- Vertex AI API aktif olmali
-- `gcloud` CLI kurulu olmali
+###  Simülasyonun Kapsamı
 
-### gcloud giris ve kimlik
+SGSA aşağıdaki bileşenleri simüle eder:
 
-```powershell
-gcloud init
-gcloud auth application-default login
-```
+-  Üretim noktaları (generation nodes)  
+-  Tüketim noktaları (load nodes)  
+-  Trafo merkezleri (substations)  
+-  Yenilenebilir enerji kaynakları  
+-  Yedek sistemler  
 
-### Proje ve API ayari
+Bu yapı sayesinde sistem, gerçek bir elektrik şebekesinin sadeleştirilmiş bir dijital ikizi (digital twin) gibi davranır.
 
-```powershell
-gcloud config set project YOUR_PROJECT_ID
-gcloud services enable aiplatform.googleapis.com
-```
+---
 
-### Python SDK kurulumu
+###  Mimari Yaklaşım
 
-```powershell
-pip install --upgrade google-genai
-```
+Proje, **frontend-only mimari** kullanır:
 
-### Ortam degiskenleri (PowerShell)
+- Tüm iş mantığı JavaScript ile çalışır  
+- Veri kalıcılığı `localStorage` üzerinden sağlanır  
+- Grafikler düşük maliyetli **Canvas API** ile çizilir  
+- Harici kütüphane veya framework kullanılmaz  
 
-```powershell
-$env:GOOGLE_CLOUD_PROJECT="YOUR_PROJECT_ID"
-$env:GOOGLE_CLOUD_LOCATION="global"
-$env:GOOGLE_GENAI_USE_VERTEXAI="True"
-```
+Bu yaklaşım sayesinde proje:
 
-### Ilk Gemini 3 Preview istegi
+- Hafif  
+- Hızlı  
+- Kolay taşınabilir  
+- Kurulumsuz  
 
-```python
-from google import genai
+bir yapı sunar.
 
-client = genai.Client()
+---
 
-response = client.models.generate_content(
-    model="gemini-3-flash-preview",
-    contents="Merhaba! Bana 3 maddede Python'da for dongusunu anlat.",
-)
+###  Kimler İçin?
 
-print(response.text)
-```
+Bu proje özellikle:
+
+-  Enerji sistemleri ile ilgilenenler  
+-  Dashboard ve veri görselleştirme geliştirenler  
+-  Simülasyon mantığını öğrenmek isteyenler  
+-  Frontend geliştiriciler  
+
+için güçlü bir referans ve demo niteliğindedir.
+
+---
+
+###  Önemli Not
+
+SGSA, gerçek dünya sistemlerini birebir temsil etmez. Kullanılan model:
+
+- Basitleştirilmiş  
+- Deterministik olmayan (random etkiler içerir)  
+- Eğitim ve demo amaçlıdır  
+
+Gerçek enerji altyapılarında kullanılmadan önce ciddi mühendislik, veri entegrasyonu ve güvenlik katmanları gereklidir.
+
+##  Özellikler
+
+###  Kimlik Doğrulama
+- Giriş / kayıt sistemi
+- Rol bazlı erişim kontrolü
+- localStorage ile oturum yönetimi
+
+###  Dashboard
+- Canlı veri simülasyonu
+- Şebeke yükü, voltaj ve frekans takibi
+- Dinamik risk göstergesi
+
+###  Gelişmiş Görselleştirme
+- Zaman serisi grafikleri (Canvas)
+- Tahmin modeli grafiği
+- Histogram analizleri
+- Frekans & voltaj dağılımı
+
+###  Şebeke Topolojisi
+- Node tabanlı ağ yapısı
+- Edge bağlantıları
+- Yük yoğunluğuna göre renk kodlama
+
+###  Alarm Sistemi
+- Kritik düğüm tespiti
+- Gerçek zamanlı alarm sayacı
+- Event log (olay geçmişi)
+
+###  Kontrol Paneli
+- Yük simülasyonu kontrolü
+- Voltaj parametreleri
+- Simülasyon hız ayarı
+- Alarm eşikleri
+- Kullanıcı yönetimi (Admin)
+
+---
+
+##  Kullanıcı Rolleri
+
+| Rol        | Açıklama |
+|------------|----------|
+|  İzleyici | Sadece veri görüntüleme |
+|  Analist | Analiz ekranlarına erişim |
+|  Mühendis | Sistem parametrelerini kısmen değiştirme |
+|  Admin | Tam kontrol + kullanıcı yönetimi |
+
+---
+
+##  Sistem Ekranları
+
+###  Giriş / Kayıt
+- Kullanıcı oluşturma
+- Rol seçimi
+- Basit doğrulama sistemi
+
+###  Genel Bakış
+- Anlık metrikler
+- Risk göstergesi
+- Olay günlüğü
+
+###  Topoloji
+- Şebeke haritası
+- Düğüm bağlantıları
+- Dinamik stres renkleri
+
+###  Analiz
+- Histogram
+- Risk faktörleri matrisi
+- Dağılım grafikleri
+
+###  Kontrol Paneli
+- Simülasyon parametreleri
+- Admin kullanıcı yönetimi
+
+###  Alarmlar
+- Kritik düğümler
+- Uyarı seviyeleri
+- Olay geçmişi
+
+---
+
+##  Kullanılan Teknolojiler
+
+| Teknoloji | Amaç |
+|----------|------|
+| HTML5 | Yapı |
+| CSS3 | UI / Dark Theme |
+| JavaScript (Vanilla) | İş mantığı |
+| Canvas API | Grafik çizimi |
+| localStorage | Veri saklama |
+
+---
+##  Test Senaryoları
+
+Aşağıdaki senaryolar ile sistemi test edebilirsiniz:
+
+### 1. Yük Stresi Testi
+- Kontrol panelinden yükü %130+ seviyesine çıkarın
+- Kritik node sayısının arttığını gözlemleyin
+- Alarm panelini kontrol edin
+
+### 2. Voltaj Sapma Testi (Admin)
+- Voltaj katsayısını düşürün veya artırın
+- Risk skorunun nasıl değiştiğini inceleyin
+
+### 3. Simülasyon Hız Testi
+- Simülasyon hızını artırın
+- Grafiklerin gerçek zamanlı güncellenmesini gözlemleyin
+
+---
+
+##  Kurulum
+
+Herhangi bir bağımlılık gerektirmez.
+
+## Mermaid Kodu
+flowchart TD
+
+A[User] --> B[Frontend UI]
+
+B --> C{Authentication}
+C -->|Login/Register| D[Auth Service]
+C -->|Guest| E[Limited Access]
+
+D --> F[Backend API]
+E --> F
+
+F --> G[User Management]
+F --> H[Project Management]
+F --> I[Data Processing]
+F --> J[Notification System]
+
+G --> G1[Profile Handling]
+G --> G2[Role & Permissions]
+
+H --> H1[Create Project]
+H --> H2[Update/Delete Project]
+H --> H3[Assign Tasks]
+
+I --> I1[Input Validation]
+I --> I2[Business Logic Engine]
+I --> I3[Data Transformation]
+
+J --> J1[Email Service]
+J --> J2[Push Notifications]
+
+F --> K[(Database)]
+K --> K1[Users Table]
+K --> K2[Projects Table]
+K --> K3[Logs]
+
+F --> L[External APIs]
+L --> L1[3rd Party Integration]
+L --> L2[Analytics Service]
+
+F --> M[Monitoring System]
+M --> M1[Error Tracking]
+M --> M2[Performance Metrics]
+
+J --> N[User Feedback Loop]
+N --> B
 
 
-## 3) Mini Ogrenci Challenge (Opsiyonel)
-1. Terminalde su komutu yaz: `ollama run gemini-3-flash-preview`
-2. Sonra Ollama'da gecerli bir modelle sor: `ollama run gemma3:1b`
-3. Ayni soruyu Gemini 3 preview ile sor.
-4. Cevaplari hiz, detay ve dogruluk acisindan karsilastir.
-
-## 4) Hata Cozme Kisa Notlari
-- `403` alirsan: Billing, Vertex AI API ve IAM rol (`roles/aiplatform.user`) kontrol et.
-- `401` alirsan: `gcloud auth application-default login` komutunu yeniden calistir.
-- `ollama model not found` alirsan once su komutu calistir: `ollama run gemma3:1b`
-- `Model not found` alirsan: model ID'yi kontrol et (`gemini-3-flash-preview`, `gemini-3-pro-preview`, `gemini-3.1-pro-preview`).
-
-## Kaynaklar (Resmi)
-- Ollama Quickstart: https://docs.ollama.com/quickstart
-- Ollama Windows: https://docs.ollama.com/windows
-- Ollama Linux: https://docs.ollama.com/linux
-- Vertex AI Quickstart: https://docs.cloud.google.com/vertex-ai/generative-ai/docs/start/quickstart
-- Gemini 3 Baslangic: https://docs.cloud.google.com/vertex-ai/generative-ai/docs/start/get-started-with-gemini-3
-- Gemini 3 Pro Model: https://docs.cloud.google.com/vertex-ai/generative-ai/docs/models/gemini/3-pro
-- Gemini 3 Flash Model: https://docs.cloud.google.com/vertex-ai/generative-ai/docs/models/gemini/3-flash
+```bash
+git clone <repo-url>
