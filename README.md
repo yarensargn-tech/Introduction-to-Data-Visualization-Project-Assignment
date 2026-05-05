@@ -1,270 +1,297 @@
-#  SGSA — Akıllı Şebeke Stres Analiz Sistemi
+# GRID-STRESS · Akıllı Şebeke Stres Analiz Sistemi
 
-<p align="center">
-  <b>Gerçek zamanlı şebeke simülasyonu • Risk analizi • Modern dashboard</b>
-</p>
-
-##  İçindekiler
-
-- Proje Hakkında  
-- Özellikler  
-- Kullanıcı Rolleri  
-- Ekranlar  
-- Teknolojiler  
-- Kurulum  
-- Kullanım  
-- Simülasyon Mantığı  
-- Veri Yapısı  
-- Güvenlik Notları  
-- Gelecek Geliştirmeler  
-- Lisans  
+> **Smart Grid Stress Analysis System** — Veri Görselleştirme Dersi Projesi
+>
+> Elektrik şebekesi operasyon merkezleri için gerçek zamanlı izleme, stres analizi
+> ve **Ollama LLM** destekli karar destek sistemi.
 
 ---
 
-##  Proje Hakkında
+## 🎯 Ne Yapar?
 
-**SGSA (Smart Grid Stress Analyzer)**, modern elektrik şebekelerinde oluşabilecek yük dengesizliklerini, sistem stresini ve olası çökme risklerini analiz etmek amacıyla geliştirilmiş, tamamen tarayıcı üzerinde çalışan bir simülasyon ve görselleştirme platformudur.
+Bu sistem, elektrik şebekesi operatörlerinin günlük olarak karşılaştığı bir
+problemi çözer: **şebekenin hangi noktasının ne kadar stres altında olduğunu
+anlamak ve doğru anda doğru kararı vermek.**
 
-Günümüz enerji altyapıları, artan tüketim, yenilenebilir enerji entegrasyonu ve dağıtık üretim gibi faktörler nedeniyle giderek daha karmaşık hale gelmektedir. Bu karmaşıklık, sistem üzerinde anlık yük dalgalanmaları ve kritik stres durumları oluşturabilir. SGSA, bu tür durumları **basitleştirilmiş ancak gerçekçi bir model ile simüle ederek** kullanıcıya anlaşılır ve etkileşimli bir analiz ortamı sunar.
+Sistem, 10 trafo merkezi ve 12 iletim hattından oluşan Türkiye benzeri bir
+şebekeyi gerçek zamanlı simüle eder. Her saniye:
 
-###  Projenin Temel Amaçları
-
-- Şebeke davranışını gerçek zamanlı olarak modellemek  
-- Kritik yük noktalarını (node) tespit etmek  
-- Sistem genelinde stres seviyesini ölçmek  
-- Olası çökme (failure) senaryolarını öngörmek  
-- Kullanıcıya görsel ve sezgisel bir kontrol paneli sağlamak  
-
----
-
-###  Nasıl Çalışır?
-
-SGSA, arka planda çalışan bir **simülasyon motoru** ile sistem davranışını üretir:
-
-- Her düğüm (node), belirli bir yük değeri (%0–100) taşır  
-- Bu değerler zamanla rastgele ancak kontrollü şekilde değişir  
-- Tüm düğümlerin ortalaması alınarak sistem yükü hesaplanır  
-- Kritik eşiklerin aşılması durumunda alarm mekanizması tetiklenir  
-- Risk skoru; yük, dengesizlik ve kritik node sayısına göre belirlenir  
-
-Bu süreç yaklaşık **her 1.2 saniyede bir güncellenir** ve kullanıcı arayüzüne anlık olarak yansıtılır.
+- Her bileşenin **yük, gerilim, sıcaklık ve frekansını** takip eder
+- Çok faktörlü bir **stres skoru** (0-100) hesaplar
+- Anomalileri otomatik tespit eder
+- **Ollama LLM** ile operatöre Türkçe, profesyonel öneriler sunar
+- Operatör doğal dilde sistem hakkında soru sorabilir
 
 ---
 
-###  Simülasyonun Kapsamı
+## 🧩 Çözülen Gerçek Problem
 
-SGSA aşağıdaki bileşenleri simüle eder:
+**Problem:** Şebeke operatörleri yüzlerce sensörden gelen veriyi izlemek zorunda.
+Aşırı yük, gerilim sapması, sıcaklık artışı gibi durumların hangi bileşenlerde
+ne anlama geldiğini ayırt etmek hem teknik bilgi hem hızlı reaksiyon gerektirir.
+Yanlış bir karar, geniş alanlı elektrik kesintisine (blackout) neden olabilir.
 
--  Üretim noktaları (generation nodes)  
--  Tüketim noktaları (load nodes)  
--  Trafo merkezleri (substations)  
--  Yenilenebilir enerji kaynakları  
--  Yedek sistemler  
-
-Bu yapı sayesinde sistem, gerçek bir elektrik şebekesinin sadeleştirilmiş bir dijital ikizi (digital twin) gibi davranır.
-
----
-
-###  Mimari Yaklaşım
-
-Proje, **frontend-only mimari** kullanır:
-
-- Tüm iş mantığı JavaScript ile çalışır  
-- Veri kalıcılığı `localStorage` üzerinden sağlanır  
-- Grafikler düşük maliyetli **Canvas API** ile çizilir  
-- Harici kütüphane veya framework kullanılmaz  
-
-Bu yaklaşım sayesinde proje:
-
-- Hafif  
-- Hızlı  
-- Kolay taşınabilir  
-- Kurulumsuz  
-
-bir yapı sunar.
+**Çözüm:** GRID-STRESS, bütün şebeke verisini tek bir kontrol odası arayüzünde
+toplar, çok boyutlu stres analizi yapar ve LLM tabanlı bir AI danışman ile
+**operatörün anlayacağı dilde** öneriler sunar.
 
 ---
 
-###  Kimler İçin?
+## 🏗️ Mimari
 
-Bu proje özellikle:
-
--  Enerji sistemleri ile ilgilenenler  
--  Dashboard ve veri görselleştirme geliştirenler  
--  Simülasyon mantığını öğrenmek isteyenler  
--  Frontend geliştiriciler  
-
-için güçlü bir referans ve demo niteliğindedir.
-
----
-
-###  Önemli Not
-
-SGSA, gerçek dünya sistemlerini birebir temsil etmez. Kullanılan model:
-
-- Basitleştirilmiş  
-- Deterministik olmayan (random etkiler içerir)  
-- Eğitim ve demo amaçlıdır  
-
-Gerçek enerji altyapılarında kullanılmadan önce ciddi mühendislik, veri entegrasyonu ve güvenlik katmanları gereklidir.
-
-##  Özellikler
-
-###  Kimlik Doğrulama
-- Giriş / kayıt sistemi
-- Rol bazlı erişim kontrolü
-- localStorage ile oturum yönetimi
-
-###  Dashboard
-- Canlı veri simülasyonu
-- Şebeke yükü, voltaj ve frekans takibi
-- Dinamik risk göstergesi
-
-###  Gelişmiş Görselleştirme
-- Zaman serisi grafikleri (Canvas)
-- Tahmin modeli grafiği
-- Histogram analizleri
-- Frekans & voltaj dağılımı
-
-###  Şebeke Topolojisi
-- Node tabanlı ağ yapısı
-- Edge bağlantıları
-- Yük yoğunluğuna göre renk kodlama
-
-###  Alarm Sistemi
-- Kritik düğüm tespiti
-- Gerçek zamanlı alarm sayacı
-- Event log (olay geçmişi)
-
-###  Kontrol Paneli
-- Yük simülasyonu kontrolü
-- Voltaj parametreleri
-- Simülasyon hız ayarı
-- Alarm eşikleri
-- Kullanıcı yönetimi (Admin)
-
----
-
-##  Kullanıcı Rolleri
-
-| Rol        | Açıklama |
-|------------|----------|
-|  İzleyici | Sadece veri görüntüleme |
-|  Analist | Analiz ekranlarına erişim |
-|  Mühendis | Sistem parametrelerini kısmen değiştirme |
-|  Admin | Tam kontrol + kullanıcı yönetimi |
-
----
-
-##  Sistem Ekranları
-
-###  Giriş / Kayıt
-- Kullanıcı oluşturma
-- Rol seçimi
-- Basit doğrulama sistemi
-
-###  Genel Bakış
-- Anlık metrikler
-- Risk göstergesi
-- Olay günlüğü
-
-###  Topoloji
-- Şebeke haritası
-- Düğüm bağlantıları
-- Dinamik stres renkleri
-
-###  Analiz
-- Histogram
-- Risk faktörleri matrisi
-- Dağılım grafikleri
-
-###  Kontrol Paneli
-- Simülasyon parametreleri
-- Admin kullanıcı yönetimi
-
-###  Alarmlar
-- Kritik düğümler
-- Uyarı seviyeleri
-- Olay geçmişi
-
----
-
-##  Kullanılan Teknolojiler
-
-| Teknoloji | Amaç |
-|----------|------|
-| HTML5 | Yapı |
-| CSS3 | UI / Dark Theme |
-| JavaScript (Vanilla) | İş mantığı |
-| Canvas API | Grafik çizimi |
-| localStorage | Veri saklama |
-
----
-##  Test Senaryoları
-
-Aşağıdaki senaryolar ile sistemi test edebilirsiniz:
-
-### 1. Yük Stresi Testi
-- Kontrol panelinden yükü %130+ seviyesine çıkarın
-- Kritik node sayısının arttığını gözlemleyin
-- Alarm panelini kontrol edin
-
-### 2. Voltaj Sapma Testi (Admin)
-- Voltaj katsayısını düşürün veya artırın
-- Risk skorunun nasıl değiştiğini inceleyin
-
-### 3. Simülasyon Hız Testi
-- Simülasyon hızını artırın
-- Grafiklerin gerçek zamanlı güncellenmesini gözlemleyin
-
----
-
-##  Kurulum
-
-Herhangi bir bağımlılık gerektirmez.
-
-## Sistem Diyagramı
-
-```mermaid
-flowchart LR
-
-A[Kullanıcı] --> B[Ön Uç Arayüzü]
-
-B --> C{Kimlik Doğrulama}
-C -->|Giriş| D[Kimlik Doğrulama Servisi]
-C -->|Misafir| E[Sınırlı Erişim]
-
-D --> F[Arka Uç API]
-E --> F
-
-F --> G[Kullanıcı Yönetimi]
-F --> H[Proje Yönetimi]
-F --> I[Veri İşleme]
-F --> J[Bildirim Sistemi]
-
-G --> G1[Profil Yönetimi]
-G --> G2[Rol & Yetkiler]
-
-H --> H1[Proje Oluştur]
-H --> H2[Güncelle/Sil]
-H --> H3[Görev Ata]
-
-I --> I1[Girdi Doğrulama]
-I --> I2[İş Mantığı]
-I --> I3[Veri Dönüşümü]
-
-J --> J1[E-posta]
-J --> J2[Push Bildirim]
-
-F --> K[(Veritabanı)]
-K --> K1[Kullanıcılar]
-K --> K2[Projeler]
-K --> K3[Loglar]
-
-F --> L[Harici API]
-L --> L1[Entegrasyon]
-L --> L2[Analitik]
-
-J --> N[Geri Bildirim]
-N --> B
 ```
+┌─────────────────────────────────────────────────────────────┐
+│                    BROWSER (Dashboard UI)                   │
+│   Harita · Grafikler · Stres Göstergesi · Sohbet · Tablo   │
+└────────────────────────┬────────────────────────────────────┘
+                         │ HTTP/JSON (her 2 sn)
+                         ▼
+┌─────────────────────────────────────────────────────────────┐
+│                       FLASK API                             │
+│   /api/grid/snapshot · /api/llm/* · /api/anomalies · ...    │
+└────────┬───────────────┬───────────────┬──────────┬─────────┘
+         │               │               │          │
+         ▼               ▼               ▼          ▼
+   ┌─────────┐    ┌──────────┐    ┌──────────┐  ┌────────┐
+   │  Grid   │    │  Stress  │    │   LLM    │  │  Data  │
+   │  Sim.   │───▶│ Analyzer │    │ Advisor  │  │ Logger │
+   └─────────┘    └──────────┘    └─────┬────┘  └────────┘
+                                        │
+                                        ▼
+                               ┌──────────────────┐
+                               │   OLLAMA (yerel) │
+                               │  llama3.2 / vs.  │
+                               └──────────────────┘
+```
+
+---
+
+## 🚀 Kurulum
+
+### 1. Gereksinimler
+
+- **Python 3.9+**
+- **Ollama** kurulu ve bir model yüklenmiş olmalı
+  - İndir: https://ollama.com/download
+  - Önerilen model: `ollama pull llama3.2` (3B - hızlı) veya `ollama pull gemma2:2b`
+
+### 2. Bağımlılıkları yükle
+
+```bash
+pip install -r requirements.txt
+```
+
+### 3. Ollama servisini başlat
+
+Yeni bir terminalde:
+
+```bash
+ollama serve
+```
+
+Servisin çalışıp çalışmadığını kontrol etmek için:
+
+```bash
+curl http://localhost:11434/api/tags
+```
+
+### 4. Uygulamayı çalıştır
+
+```bash
+python app.py
+```
+
+Tarayıcıdan `http://localhost:5000` adresine gidin.
+
+---
+
+## 🎛️ Kullanım
+
+### Dashboard Bileşenleri
+
+| Bölüm | İşlev |
+|-------|-------|
+| **Stres Skoru (sol üst)** | 0-100 arası genel sistem stres göstergesi |
+| **Anlık Metrikler** | Toplam yük, üretim, frekans, gerilim, kayıplar |
+| **Senaryo Testi** | Kış pik / yaz pik / hat arızası simülasyonları |
+| **Şebeke Topolojisi (orta)** | Türkiye haritası üzerinde gerçek zamanlı şebeke |
+| **Stres & Yük Trend** | Zaman içinde stres ve yük grafiği |
+| **AI Danışman (sağ üst)** | LLM otomatik önerileri (30 sn'de bir yenilenir) |
+| **Olay Kayıtları** | Tespit edilen anomaliler |
+| **Operatör Asistanı** | LLM ile sohbet — "İstanbul'daki yük kritik mi?" gibi sorular |
+| **Trafo Tablosu (alt)** | Tüm 10 trafo merkezinin durum kartları |
+
+### Özellikler
+
+#### 1. Gerçek zamanlı izleme
+Her 2 saniyede sistem güncellenir. Trafolar yüke göre **yeşil/sarı/kırmızı** renge boyanır.
+
+#### 2. Senaryo testleri
+Sağ üst panelden farklı senaryolar tetiklenebilir:
+- **Kış pik yükü** — %35 yük artışı
+- **Yaz klima yükü** — %45 artış (Antalya'da daha sert)
+- **Hat arızası** — Kocaeli-Ankara hattı devre dışı
+- **Üretim kaybı** — Frekans düşüşü ve kompansasyon
+
+#### 3. Manüel stres uygulama
+Herhangi bir trafo merkezine tıklayın → modal açılır → istediğiniz yükü, istediğiniz süre kadar uygulayın.
+
+#### 4. LLM destekli analiz
+- **Otomatik öneri**: Sistem her 30 saniyede yeni öneri üretir
+- **Bileşen analizi**: Bir trafoya tıklayın, AI o bileşene özel risk değerlendirmesi yapar
+- **Sohbet**: Türkçe doğal dilde soru sorabilirsiniz: 
+  - "Hangi trafo en riskli durumda?"
+  - "Yük dağılımını nasıl optimize edebilirim?"
+  - "Frekans neden 50 Hz'in altında?"
+
+---
+
+## 📊 Stres Skoru Nasıl Hesaplanır?
+
+Her bileşen için 4 ana faktör değerlendirilir:
+
+```
+Stres = max(0.6 × en_yüksek_faktör + 0.4 × ortalama_faktör)
+
+Faktörler:
+├── Yük Stresi    (yük%, eşikler: 80, 95)
+├── Gerilim Stresi  (yüke bağlı düşüş)
+├── Sıcaklık Stresi (eşikler: 65°C, 80°C)
+└── Frekans Stresi  (sapma: ±0.2, ±0.5 Hz)
+```
+
+Sistem genel stresi:
+
+```
+Genel Stres = ortalama(bileşen_stresleri) × 0.4 
+            + max(bileşen_stresleri) × 0.4 
+            + frekans_stresi × 0.2
+```
+
+**Seviyeler:**
+- 🟢 **Düşük (0-30)**: Normal çalışma
+- 🟡 **Orta (30-50)**: Dikkat
+- 🟠 **Yüksek (50-75)**: Müdahale gerekli
+- 🔴 **Kritik (75-100)**: Acil eylem
+
+---
+
+## 🤖 Ollama Entegrasyonu Detayı
+
+LLM, sisteme şu bilgilerle beslenir:
+
+1. **Sistem yönergesi (system prompt)**: TEİAŞ seviyesi operasyon danışmanı rolü
+2. **Anlık şebeke özeti**: Yük, frekans, kritik bileşenler vs.
+3. **Operatör sorusu / context**
+
+LLM şu şekilde yanıt verir:
+- Mevcut durum özeti (1 cümle)
+- Riskler (1-2 cümle)
+- Somut öneriler (1-2 madde)
+
+Modeli değiştirmek için:
+
+```bash
+export OLLAMA_MODEL=mistral   # veya gemma2, qwen2.5, vs.
+python app.py
+```
+
+---
+
+## 📁 Proje Yapısı
+
+```
+smart_grid_stress_analyzer/
+├── app.py                    # Ana Flask uygulaması
+├── requirements.txt          # Python bağımlılıkları
+├── README.md                 # Bu dosya
+├── modules/
+│   ├── grid_simulator.py     # Şebeke simülasyonu
+│   ├── stress_analyzer.py    # Stres skoru hesaplama
+│   ├── llm_advisor.py        # Ollama entegrasyonu
+│   └── data_logger.py        # Tarihsel veri & istatistik
+├── templates/
+│   └── index.html            # Dashboard arayüzü
+└── static/
+    ├── css/
+    │   └── style.css         # Kontrol odası teması
+    └── js/
+        └── main.js           # Frontend logic
+```
+
+---
+
+## 🎨 Tasarım Felsefesi
+
+Arayüz, gerçek bir **şebeke kontrol odası** estetiği üzerine inşa edildi:
+
+- **Karanlık tema**: 7/24 izleme yapan operatörlerin gözünü yormayan koyu renkler
+- **Monospace tipografi (JetBrains Mono)**: Teknik veriler için netlik
+- **Display fontu (Syne)**: Başlıklar ve büyük sayılar için karakter
+- **Renk kodlaması**: Tüm sistem genelinde tutarlı (yeşil=normal, sarı=uyarı, kırmızı=kritik)
+- **Yüksek bilgi yoğunluğu**: Tek ekranda kontrol odasında ihtiyaç duyulan tüm veriler
+
+---
+
+## 🔧 Genişletme Fikirleri
+
+1. **Gerçek SCADA bağlantısı**: Modbus/IEC-61850 üzerinden gerçek sensör verileri
+2. **ML tahmini**: Yük tahmini için LSTM modeli ekle
+3. **Çok kullanıcılı operatör paneli**: WebSocket ile gerçek zamanlı çoklu kullanıcı
+4. **PDF rapor üretimi**: Vardiya sonu otomatik özet raporu
+5. **Mobil bildirim**: Kritik anomali için SMS/push bildirim
+6. **Veritabanı**: PostgreSQL + TimescaleDB ile uzun vadeli analiz
+
+---
+
+## ⚠️ Bilinen Sınırlamalar
+
+- Veriler **simülasyondur** — gerçek SCADA entegrasyonu yok
+- LLM yanıtları model kalitesine bağlı (3B model hızlı ama kısıtlı, 7B+ önerilir)
+- Frontend `localStorage` kullanmaz — sayfa yenilendiğinde sohbet sıfırlanır
+
+---
+
+## 📜 Lisans
+
+Akademik amaçlı geliştirilmiştir. Ders projesi.
+
+---
+
+## 👤 İletişim
+
+Veri Görselleştirme dersi projesi · 2026
+
+## Mermaid Kodu
+
+flowchart TB
+
+UI[Dashboard UI]
+API[Flask API]
+
+SIM[Grid Simulator]
+ANALYZER[Stress Analyzer]
+ANOM[Anomaly Detector]
+LOG[Data Logger]
+
+LLM[LLM Advisor]
+MODEL[Ollama Model]
+
+UI --> API
+
+API --> SIM
+SIM --> ANALYZER
+ANALYZER --> ANOM
+ANOM --> API
+
+ANALYZER --> API
+
+SIM --> LOG
+ANALYZER --> LOG
+
+API --> LLM
+LLM --> MODEL
+MODEL --> LLM
+LLM --> API
+
+API --> UI
