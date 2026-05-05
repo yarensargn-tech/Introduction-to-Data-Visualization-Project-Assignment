@@ -263,35 +263,4 @@ Akademik amaçlı geliştirilmiştir. Ders projesi.
 Veri Görselleştirme dersi projesi · 2026
 
 ## Mermaid Kodu
-
-flowchart TB
-
-UI[Dashboard UI]
-API[Flask API]
-
-SIM[Grid Simulator]
-ANALYZER[Stress Analyzer]
-ANOM[Anomaly Detector]
-LOG[Data Logger]
-
-LLM[LLM Advisor]
-MODEL[Ollama Model]
-
-UI --> API
-
-API --> SIM
-SIM --> ANALYZER
-ANALYZER --> ANOM
-ANOM --> API
-
-ANALYZER --> API
-
-SIM --> LOG
-ANALYZER --> LOG
-
-API --> LLM
-LLM --> MODEL
-MODEL --> LLM
-LLM --> API
-
-API --> UI
+flowchart LR A[User] --> B[Frontend UI] B --> C{Authentication} C -->|Login| D[Auth Service] C -->|Guest| E[Limited Access] D --> F[Backend API] E --> F subgraph Core System F --> G[User Management] F --> H[Project Management] F --> I[Data Processing] F --> J[Notification System] end subgraph Database K[(Database)] K --> K1[Users] K --> K2[Projects] K --> K3[Logs] end F --> K subgraph External L[External APIs] L --> L1[Integration] L --> L2[Analytics] end F --> L J --> N[Feedback] N --> B ```bash git clone <repo-url>
