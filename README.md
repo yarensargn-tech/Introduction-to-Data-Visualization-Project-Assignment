@@ -263,4 +263,47 @@ Akademik amaçlı geliştirilmiştir. Ders projesi.
 Veri Görselleştirme dersi projesi · 2026
 
 ## Mermaid Kodu
-flowchart LR A[User] --> B[Frontend UI] B --> C{Authentication} C -->|Login| D[Auth Service] C -->|Guest| E[Limited Access] D --> F[Backend API] E --> F subgraph Core System F --> G[User Management] F --> H[Project Management] F --> I[Data Processing] F --> J[Notification System] end subgraph Database K[(Database)] K --> K1[Users] K --> K2[Projects] K --> K3[Logs] end F --> K subgraph External L[External APIs] L --> L1[Integration] L --> L2[Analytics] end F --> L J --> N[Feedback] N --> B ```bash git clone <repo-url>
+```mermaid
+flowchart TB
+
+UI[Browser UI] --> API[Flask App]
+
+API --> SNAPSHOT[grid snapshot]
+API --> HISTORY[grid history]
+API --> INJECT[inject stress]
+API --> SCENARIO[run scenario]
+API --> LLM_ANALYZE[llm analyze]
+API --> LLM_REC[llm recommend]
+API --> LLM_CHAT[llm chat]
+API --> STATS[statistics]
+API --> ANOMALIES[anomalies]
+API --> HEALTH[health check]
+API --> COMPONENTS[components]
+
+SNAPSHOT --> SIM[Grid Simulator]
+SIM --> ANALYZER[Stress Analyzer]
+ANALYZER --> LOGGER[Data Logger]
+ANALYZER --> SNAPSHOT
+
+HISTORY --> LOGGER
+
+INJECT --> SIM
+SCENARIO --> SIM
+
+LLM_ANALYZE --> LLM[LLM Advisor]
+LLM_REC --> LLM
+LLM_CHAT --> LLM
+
+LLM --> MODEL[Ollama Model]
+MODEL --> LLM
+
+STATS --> LOGGER
+ANOMALIES --> ANALYZER
+
+HEALTH --> LLM
+HEALTH --> SIM
+
+COMPONENTS --> SIM
+
+API --> UI
+```
